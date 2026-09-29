@@ -1,0 +1,19 @@
+# Build output
+bin/
+obj/
+
+# Local database, created on first run
+*.db
+*.db-shm
+*.db-wal
+
+# Personal study notes. Remove this line to include them in the repository.
+notes/
+
+# Editor and operating system files
+.vs/
+.vscode/
+.idea/
+*.user
+.DS_Store
+Thumbs.db

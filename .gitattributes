@@ -1,0 +1,8 @@
+# Store text files with consistent line endings, whatever system they were edited on.
+* text=auto
+
+# Files that are never text.
+*.png binary
+*.jpg binary
+*.ico binary
+*.db binary
