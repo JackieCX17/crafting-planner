@@ -1,0 +1,70 @@
+# Ready-made requests for the Crafting Planner API.
+# Visual Studio, VS Code (REST Client extension), and Rider show a "Send request"
+# link above each one. Start the app first with: dotnet run
+
+@baseUrl = http://localhost:5080
+
+### List items (first page, sorted by name)
+GET {{baseUrl}}/api/items
+
+### List crafted items with "iron" in the name or description
+GET {{baseUrl}}/api/items?kind=crafted&search=iron
+
+### List one category, newest first, five per page
+GET {{baseUrl}}/api/items?category=Raw Material&sort=id&order=desc&pageSize=5
+
+### Get one item with its recipe and uses
+GET {{baseUrl}}/api/items/9
+
+### Insert: create an item
+POST {{baseUrl}}/api/items
+Content-Type: application/json
+
+{
+  "name": "Copper Ore",
+  "description": "Rock that contains copper.",
+  "category": "Raw Material"
+}
+
+### Update: replace every field of an item (use the id returned by the insert)
+PUT {{baseUrl}}/api/items/20
+Content-Type: application/json
+
+{
+  "name": "Copper Ore",
+  "description": "Soft orange rock that contains copper.",
+  "category": "Raw Material"
+}
+
+### Partial update: change only the category
+PATCH {{baseUrl}}/api/items/20
+Content-Type: application/json
+
+{
+  "category": "Ore"
+}
+
+### Delete an item
+DELETE {{baseUrl}}/api/items/20
+
+### Rejected: the name is missing (400)
+POST {{baseUrl}}/api/items
+Content-Type: application/json
+
+{
+  "description": "An item with no name."
+}
+
+### Rejected: the name is already in use (409)
+POST {{baseUrl}}/api/items
+Content-Type: application/json
+
+{
+  "name": "stick"
+}
+
+### Rejected: the item does not exist (404)
+GET {{baseUrl}}/api/items/9999
+
+### Rejected: other recipes use the item as an ingredient (409)
+DELETE {{baseUrl}}/api/items/9
