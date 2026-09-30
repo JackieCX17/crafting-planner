@@ -85,5 +85,65 @@ def plan(target: str, quantity: int, recipes: dict[str, Recipe]) -> Plan:
 
     Note that the order in step 2 is the reverse of the order the plan reports
     its steps in.
+
+    This version does the work in two passes. The first pass walks the recipes
+    and produces only the order (steps 1 and 2). The second pass does the
+    arithmetic (steps 3 to 5). Keeping them apart is what stops a shared
+    ingredient from being rounded separately for each branch that needs it.
     """
-    raise NotImplementedError("plan() has not been written yet")
+    crafting_order = _crafting_order(target, recipes)
+
+    # Processing order: the target first, then everything it needs, so that an
+    # item's demand is complete before it is rounded.
+    demand: dict[str, int] = {target: quantity}
+    steps: list[Step] = []
+    total_seconds = 0
+
+    for item in reversed(crafting_order):
+        recipe = recipes.get(item)
+        if recipe is None:
+            continue  # raw: its demand is already the final answer
+
+        needed = demand[item]
+        crafts = (needed + recipe.makes - 1) // recipe.makes  # divide, rounding up
+        made = crafts * recipe.makes
+
+        steps.append(Step(item, needed, crafts, made, leftover=made - needed))
+        total_seconds += crafts * recipe.seconds
+
+        for ingredient, per_craft in recipe.ingredients.items():
+            demand[ingredient] = demand.get(ingredient, 0) + crafts * per_craft
+
+    raw = {item: demand[item] for item in crafting_order if item not in recipes}
+
+    # Steps were appended target-first. A person crafting wants raw-most first.
+    steps.reverse()
+
+    return Plan(raw=raw, steps=steps, total_seconds=total_seconds)
+
+
+def _crafting_order(target: str, recipes: dict[str, Recipe]) -> list[str]:
+    """Every item the target depends on, in crafting order: each item comes
+    after all of its ingredients. The target is last.
+
+    A recursive walk. An item is added to the list on the way OUT of its call,
+    after every ingredient has been added, which is what puts ingredients first.
+    The visited set makes sure an item reached by two paths is added once.
+    """
+    order: list[str] = []
+    visited: set[str] = set()
+
+    def visit(item: str) -> None:
+        if item in visited:
+            return
+        visited.add(item)
+
+        recipe = recipes.get(item)
+        if recipe is not None:
+            for ingredient in recipe.ingredients:
+                visit(ingredient)
+
+        order.append(item)  # on the way out
+
+    visit(target)
+    return order
