@@ -12,8 +12,8 @@ The crafting theme is inspired by games such as Minecraft. The same logic is use
 |---|---|---|
 | 1 | Project skeleton, database, Items API, interactive API page | Done |
 | 2 | Recipes and ingredients API, all data rules | Done |
-| 3 | Planning calculation | Next |
-| 4 | Recipe tree, summaries, export | Planned |
+| 3 | Planning calculation, with automated tests | Done |
+| 4 | Recipe tree, summaries, export | Next |
 | 5 | Website | Planned |
 | 6 | Tests, full documentation, demo script | Planned |
 
@@ -28,6 +28,14 @@ dotnet run --project src/CraftingPlanner.Api
 Then open <http://localhost:5080>. It shows the interactive API page, where every endpoint can be tried from the browser.
 
 To start again with fresh sample data, stop the app and delete `src/CraftingPlanner.Api/craftingplanner.db`.
+
+## Run the tests
+
+```
+dotnet test
+```
+
+The tests hold the planning calculation to the worked example in the design document and to cases that catch specific mistakes. The same cases are run against the Python prototype with `py prototype/test_plan.py`.
 
 ## Try these
 
@@ -44,6 +52,7 @@ On the interactive API page, open an endpoint, choose **Try it out**, then **Exe
 | `GET /api/recipes` with `uses` set to `9` | Every recipe that needs a Stick |
 | `PUT /api/recipes/2/ingredients/1` with a quantity | Adding one ingredient to a recipe |
 | `PUT /api/recipes/1/ingredients/9` with a quantity | A rejection: Planks made from Sticks would loop, because Sticks are made from Planks |
+| `GET /api/items/18/plan` with `quantity` set to `3` | Everything it takes to make three Tool Kits, and the order to craft it in |
 
 ## Documentation
 
@@ -59,11 +68,13 @@ Every public class, function, and field in the code has a structured comment. Th
 
 ```
 docs/                        Design document and API guide
+prototype/                   The planning calculation in Python, written before the C# version
+tests/CraftingPlanner.Tests/ Automated tests
 src/CraftingPlanner.Api/
   Program.cs                 Startup: registers the parts and the request pipeline
   Controllers/               The endpoints
   Contracts/                 The shapes of requests and responses
-  Services/                  Logic that needs no database or web, such as the loop search
+  Services/                  Logic that needs no database or web: the loop search and the planning calculation
   Models/                    The database tables, described as classes
   Data/                      Database connection, table rules, sample data
   CraftingPlanner.Api.http   Ready-made requests for editors that support them

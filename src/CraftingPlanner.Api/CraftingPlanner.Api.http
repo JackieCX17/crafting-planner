@@ -195,3 +195,22 @@ DELETE {{baseUrl}}/api/recipes/4/ingredients/3
 
 ### Rejected: the only ingredient of a recipe cannot be removed (409)
 DELETE {{baseUrl}}/api/recipes/1/ingredients/1
+
+# ---------------------------------------------------------------------------
+# Planning
+# ---------------------------------------------------------------------------
+
+### What it takes to make three Tool Kits (the worked example in the design document)
+GET {{baseUrl}}/api/items/18/plan?quantity=3
+
+### One Tool Kit: Sticks are needed by Sword and Pickaxe, and are rounded once, not twice
+GET {{baseUrl}}/api/items/18/plan?quantity=1
+
+### A Hunter Kit: bow, sixteen arrows, and a chest
+GET {{baseUrl}}/api/items/19/plan
+
+### A raw item: the plan is just the item itself
+GET {{baseUrl}}/api/items/1/plan?quantity=5
+
+### Rejected: the quantity is out of range (400)
+GET {{baseUrl}}/api/items/18/plan?quantity=0

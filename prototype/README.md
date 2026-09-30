@@ -14,4 +14,4 @@ Run the checks from the repository root:
 py prototype/test_plan.py
 ```
 
-The C# version in `src/CraftingPlanner.Api/Services` is checked against the same cases.
+The C# version is `src/CraftingPlanner.Api/Services/PlanCalculator.cs`. The tests in `tests/CraftingPlanner.Tests/PlanCalculatorTests.cs` hold it to the same cases and the same numbers.
