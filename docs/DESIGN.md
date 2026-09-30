@@ -120,6 +120,8 @@ Every rejection uses the same standard error format (Problem Details), with a sh
 | The loop search uses a queue, not a function that calls itself | A long chain of recipes cannot crash the app by nesting calls too deeply |
 | The loop search visits the nearest items first | The loop reported to the caller is the shortest one, which is the easiest to understand and fix |
 | A recipe has at most 20 ingredients | Keeps one request from creating an unreasonable amount of work |
+| A recipe tree stops at 2,000 nodes and marks what it left out | A tree repeats shared items, so a wide, deep set of recipes could make one that is far too large to send or draw. Growing it level by level puts the cut at the deepest levels, where it matters least |
+| The plan export is one table with a Type column | A single table opens cleanly in any spreadsheet program. Two tables in one file do not |
 
 ## 5. The planning calculation
 
@@ -220,7 +222,7 @@ All addresses start with `/api`. Requests and responses use JSON.
 | GET | `/items/{id}/plan?quantity=N` | Raw materials, crafting steps, leftovers, and total time |
 | GET | `/items/{id}/plan/export?quantity=N` | The same plan as a downloadable shopping list (CSV) |
 | GET | `/items/{id}/tree` | The item's recipe tree, for display |
-| GET | `/stats` | Totals across the data: item counts, most-used ingredient, longest chain |
+| GET | `/stats` | Totals across the data: item, recipe, and category counts, the most-used ingredient, and the longest recipe chain |
 
 ### Operation coverage
 
