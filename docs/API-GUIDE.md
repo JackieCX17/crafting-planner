@@ -2,14 +2,15 @@
 
 This guide shows every operation with an example request and the response it returns. The interactive API page at <http://localhost:5080/swagger> is the live reference. This guide is the walkthrough.
 
-**Covered so far:** items, recipes, ingredients, and planning (stages 1 to 3). The recipe tree, summaries, and export are added in stage 4.
+**Covered:** every endpoint in the API.
 
 | Section | Contents |
 |---|---|
 | [Items](#items) | Things that can be crafted or used as ingredients |
 | [Recipes](#recipes) | What goes into an item, and how many come out |
 | [Ingredients](#ingredients) | Changing one line of a recipe |
-| [Planning](#planning) | What it takes to make a quantity of an item |
+| [Planning](#planning) | What it takes to make a quantity of an item, as JSON or as a file, and the recipe tree |
+| [Summary](#summary) | Totals and highlights across all the data |
 | [Rejections](#rejections) | The error format, with an example of each kind |
 
 ## Basics
@@ -469,6 +470,121 @@ GET /api/items/1/plan?quantity=5
   "totalSeconds": 0
 }
 ```
+
+### Export a plan as a file
+
+```http
+GET /api/items/18/plan/export?quantity=3
+```
+
+Response `200 OK` with `Content-Type: text/csv` and `Content-Disposition: attachment; filename=plan-tool-kit-x3.csv`, so a browser saves it as a file. The contents are one table that opens cleanly in a spreadsheet:
+
+```
+Type,Item,Quantity,Crafts,Made,Leftover,Seconds
+Raw material,Coal,15,,,,
+Raw material,Iron Ore,30,,,,
+Raw material,Log,3,,,,
+Step,Plank,6,3,6,0,6
+Step,Iron Ingot,15,15,15,0,150
+Step,Stick,9,3,12,3,6
+Step,Pickaxe,3,3,3,0,24
+Step,Sword,3,3,3,0,24
+Step,Tool Kit,3,3,3,0,12
+Total time,,,,,,222
+```
+
+The same rejections apply as for the plan. An item name that contains a comma is quoted, as CSV requires.
+
+### Show an item's recipe tree
+
+```http
+GET /api/items/11/tree
+```
+
+Response `200 OK`:
+
+```json
+{
+  "itemId": 11,
+  "itemName": "Sword",
+  "kind": "crafted",
+  "quantity": 1,
+  "outputQuantity": 1,
+  "craftSeconds": 8,
+  "ingredients": [
+    {
+      "itemId": 9,
+      "itemName": "Stick",
+      "kind": "crafted",
+      "quantity": 1,
+      "outputQuantity": 4,
+      "craftSeconds": 2,
+      "ingredients": [
+        {
+          "itemId": 8,
+          "itemName": "Plank",
+          "kind": "crafted",
+          "quantity": 2,
+          "outputQuantity": 2,
+          "craftSeconds": 2,
+          "ingredients": [
+            { "itemId": 1, "itemName": "Log", "kind": "raw", "quantity": 1, "outputQuantity": null, "craftSeconds": null, "ingredients": [], "truncated": false }
+          ],
+          "truncated": false
+        }
+      ],
+      "truncated": false
+    },
+    {
+      "itemId": 10,
+      "itemName": "Iron Ingot",
+      "kind": "crafted",
+      "quantity": 2,
+      "outputQuantity": 1,
+      "craftSeconds": 10,
+      "ingredients": [
+        { "itemId": 2, "itemName": "Iron Ore", "kind": "raw", "quantity": 2, "outputQuantity": null, "craftSeconds": null, "ingredients": [], "truncated": false },
+        { "itemId": 3, "itemName": "Coal", "kind": "raw", "quantity": 1, "outputQuantity": null, "craftSeconds": null, "ingredients": [], "truncated": false }
+      ],
+      "truncated": false
+    }
+  ],
+  "truncated": false
+}
+```
+
+| | Plan | Tree |
+|---|---|---|
+| Shows | Totals | Structure |
+| A shared item | Appears once, with its total | Appears under every recipe that uses it |
+| `quantity` means | Units needed in all | Units one craft of the item above uses |
+| Use it for | Deciding what to gather | Drawing the recipe |
+
+A tree stops growing at 2,000 nodes. A node whose ingredients were left out has `"truncated": true`, and its own tree can be requested separately.
+
+## Summary
+
+### Totals and highlights
+
+```http
+GET /api/stats
+```
+
+Response `200 OK`:
+
+```json
+{
+  "itemCount": 19,
+  "rawItemCount": 7,
+  "craftedItemCount": 12,
+  "categoryCount": 6,
+  "ingredientLineCount": 22,
+  "mostUsedIngredient": { "itemId": 9, "itemName": "Stick", "recipeCount": 5 },
+  "longestChain": { "itemId": 19, "itemName": "Hunter Kit", "depth": 4 }
+}
+```
+
+`depth` counts recipes: a raw item is 0, an item made only from raw items is 1. Hunter Kit is 4 because its Bow needs Sticks, which need Planks, which need Logs. Tool Kit is also 4; ties are settled by name. Both highlights are null when there are no recipes.
 
 ## Rejections
 

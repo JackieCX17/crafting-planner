@@ -13,8 +13,8 @@ The crafting theme is inspired by games such as Minecraft. The same logic is use
 | 1 | Project skeleton, database, Items API, interactive API page | Done |
 | 2 | Recipes and ingredients API, all data rules | Done |
 | 3 | Planning calculation, with automated tests | Done |
-| 4 | Recipe tree, summaries, export | Next |
-| 5 | Website | Planned |
+| 4 | Recipe tree, summaries, export | Done |
+| 5 | Website | Next |
 | 6 | Tests, full documentation, demo script | Planned |
 
 ## Run it
@@ -53,6 +53,9 @@ On the interactive API page, open an endpoint, choose **Try it out**, then **Exe
 | `PUT /api/recipes/2/ingredients/1` with a quantity | Adding one ingredient to a recipe |
 | `PUT /api/recipes/1/ingredients/9` with a quantity | A rejection: Planks made from Sticks would loop, because Sticks are made from Planks |
 | `GET /api/items/18/plan` with `quantity` set to `3` | Everything it takes to make three Tool Kits, and the order to craft it in |
+| `GET /api/items/18/plan/export` with `quantity` set to `3` | The same plan as a file that opens in a spreadsheet |
+| `GET /api/items/11/tree` | The Sword's recipe drawn as a tree, down to the raw materials |
+| `GET /api/stats` | Totals, the most used ingredient, and the longest recipe chain |
 
 ## Documentation
 
@@ -74,7 +77,8 @@ src/CraftingPlanner.Api/
   Program.cs                 Startup: registers the parts and the request pipeline
   Controllers/               The endpoints
   Contracts/                 The shapes of requests and responses
-  Services/                  Logic that needs no database or web: the loop search and the planning calculation
+  Services/                  Logic that needs no database or web: the loop search, the planning
+                             calculation, the tree builder, chain depths, and the CSV writer
   Models/                    The database tables, described as classes
   Data/                      Database connection, table rules, sample data
   CraftingPlanner.Api.http   Ready-made requests for editors that support them

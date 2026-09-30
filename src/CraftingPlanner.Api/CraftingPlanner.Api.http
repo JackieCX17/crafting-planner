@@ -214,3 +214,16 @@ GET {{baseUrl}}/api/items/1/plan?quantity=5
 
 ### Rejected: the quantity is out of range (400)
 GET {{baseUrl}}/api/items/18/plan?quantity=0
+
+### The same plan as a downloadable file
+GET {{baseUrl}}/api/items/18/plan/export?quantity=3
+
+### The Sword's recipe tree, down to the raw materials
+GET {{baseUrl}}/api/items/11/tree
+
+# ---------------------------------------------------------------------------
+# Summary
+# ---------------------------------------------------------------------------
+
+### Totals, the most used ingredient, and the longest recipe chain
+GET {{baseUrl}}/api/stats
