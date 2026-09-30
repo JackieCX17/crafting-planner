@@ -6,6 +6,8 @@ Items are made from other items, which are made from other items. The app stores
 
 The crafting theme is inspired by games such as Minecraft. The same logic is used in manufacturing, where it is called a bill of materials.
 
+![The Plan page: raw materials to gather and the crafting steps in order for three Tool Kits](docs/images/plan.png)
+
 ## Status
 
 | Stage | Delivers | State |
@@ -14,8 +16,8 @@ The crafting theme is inspired by games such as Minecraft. The same logic is use
 | 2 | Recipes and ingredients API, all data rules | Done |
 | 3 | Planning calculation, with automated tests | Done |
 | 4 | Recipe tree, summaries, export | Done |
-| 5 | Website | Next |
-| 6 | Tests, full documentation, demo script | Planned |
+| 5 | Website | Done |
+| 6 | Endpoint tests, data dictionary, demo script | Next |
 
 ## Run it
 
@@ -25,7 +27,12 @@ You need the [.NET 10 SDK](https://dotnet.microsoft.com/download). Nothing else:
 dotnet run --project src/CraftingPlanner.Api
 ```
 
-Then open <http://localhost:5080>. It shows the interactive API page, where every endpoint can be tried from the browser.
+Then open <http://localhost:5080>.
+
+| Address | What it is |
+|---|---|
+| <http://localhost:5080> | The website: plan an item, manage items and recipes |
+| <http://localhost:5080/swagger> | The interactive API page: try every endpoint from the browser |
 
 To start again with fresh sample data, stop the app and delete `src/CraftingPlanner.Api/craftingplanner.db`.
 
@@ -35,9 +42,24 @@ To start again with fresh sample data, stop the app and delete `src/CraftingPlan
 dotnet test
 ```
 
-The tests hold the planning calculation to the worked example in the design document and to cases that catch specific mistakes. The same cases are run against the Python prototype with `py prototype/test_plan.py`.
+The tests hold the planning calculation to the worked example in the design document and to cases that catch specific mistakes, and cover the tree builder, chain depths, and the CSV export. The same calculation cases are run against the Python prototype with `py prototype/test_plan.py`.
 
-## Try these
+## The website
+
+Plain HTML, CSS, and JavaScript, served by the same app. Every page reaches the backend only through the API, so the browser's network panel shows the same calls the interactive API page makes.
+
+| Page | What it does |
+|---|---|
+| Home | Totals, the most used ingredient, the longest recipe chain, and the way in to each page |
+| Plan | Pick an item and a quantity. Get the raw materials, the crafting steps in order, the total time, and a CSV download |
+| Items | Search, filter, sort, and page through items. Add and delete items |
+| Item | Edit an item's details, create or edit its recipe, see what it is used in, and view its recipe tree |
+
+Rejections from the API appear on the page in plain words. Try giving Planks a recipe that uses Sticks, and the page explains the loop.
+
+![The Item page for the Sword: details, the recipe, what it is used in, and the recipe tree](docs/images/item.png)
+
+## Try these on the API page
 
 On the interactive API page, open an endpoint, choose **Try it out**, then **Execute**.
 
@@ -65,12 +87,12 @@ On the interactive API page, open an endpoint, choose **Try it out**, then **Exe
 | [API guide](docs/API-GUIDE.md) | Every operation with an example request and response |
 | Interactive API page | Live reference, generated from the comments in the code |
 
-Every public class, function, and field in the code has a structured comment. The build fails if one is missing.
+Every public class, function, and field in the C# code has a structured comment, and the build fails if one is missing. Every function in the website's JavaScript has one too.
 
 ## Layout
 
 ```
-docs/                        Design document and API guide
+docs/                        Design document, API guide, screenshots
 prototype/                   The planning calculation in Python, written before the C# version
 tests/CraftingPlanner.Tests/ Automated tests
 src/CraftingPlanner.Api/
@@ -80,6 +102,7 @@ src/CraftingPlanner.Api/
   Services/                  Logic that needs no database or web: the loop search, the planning
                              calculation, the tree builder, chain depths, and the CSV writer
   Models/                    The database tables, described as classes
-  Data/                      Database connection, table rules, sample data
+  Data/                      Database connection, table rules, sample data, shared queries
+  wwwroot/                   The website: pages, stylesheet, and scripts
   CraftingPlanner.Api.http   Ready-made requests for editors that support them
 ```
