@@ -2,7 +2,14 @@
 
 This guide shows every operation with an example request and the response it returns. The interactive API page at <http://localhost:5080/swagger> is the live reference. This guide is the walkthrough.
 
-**Covered so far:** items (stage 1). Recipes, planning, and summaries are added in later stages.
+**Covered so far:** items, recipes, and ingredients (stages 1 and 2). Planning and summaries are added in later stages.
+
+| Section | Contents |
+|---|---|
+| [Items](#items) | Things that can be crafted or used as ingredients |
+| [Recipes](#recipes) | What goes into an item, and how many come out |
+| [Ingredients](#ingredients) | Changing one line of a recipe |
+| [Rejections](#rejections) | The error format, with an example of each kind |
 
 ## Basics
 
@@ -212,6 +219,188 @@ DELETE /api/items/20
 
 Response `204 No Content`, with an empty body. The item's own recipe is deleted with it.
 
+## Recipes
+
+A recipe says what goes into an item and how many come out. An item has at most one recipe.
+
+| Field | Type | Rules |
+|---|---|---|
+| `id` | whole number | Set by the server |
+| `outputItemId` | whole number | Required. The item must exist and must not have a recipe yet. Cannot be changed later |
+| `outputItemName` | text | Filled in by the server |
+| `outputQuantity` | whole number | 1 to 1,000. How many one craft makes. Defaults to 1 |
+| `craftSeconds` | whole number | 0 to 86,400. How long one craft takes. Defaults to 0 |
+| `ingredients` | list | 1 to 20 entries, each item listed once |
+| `ingredients[].itemId` | whole number | Required. The item must exist |
+| `ingredients[].quantity` | whole number | 1 to 1,000. How many one craft uses |
+
+### List recipes
+
+```http
+GET /api/recipes?uses=9
+```
+
+| Parameter | Default | Meaning |
+|---|---|---|
+| `uses` | none | Return only recipes that use the item with this id as an ingredient |
+| `page` | `1` | Page number, starting at 1 |
+| `pageSize` | `20` | Recipes per page, 1 to 100 |
+
+Recipes are sorted by the name of the item they make. The response has the same paging fields as the list of items, and each entry has the same shape as the response below.
+
+### Get one recipe
+
+```http
+GET /api/recipes/4
+```
+
+Response `200 OK`:
+
+```json
+{
+  "id": 4,
+  "outputItemId": 11,
+  "outputItemName": "Sword",
+  "outputQuantity": 1,
+  "craftSeconds": 8,
+  "ingredients": [
+    { "itemId": 10, "itemName": "Iron Ingot", "quantity": 2 },
+    { "itemId": 9, "itemName": "Stick", "quantity": 1 }
+  ]
+}
+```
+
+### Insert: create a recipe
+
+This example first needs an item to make. `POST /api/items` with `{ "name": "Steel Ingot", "category": "Component" }` returns id 20.
+
+```http
+POST /api/recipes
+Content-Type: application/json
+
+{
+  "outputItemId": 20,
+  "outputQuantity": 2,
+  "craftSeconds": 15,
+  "ingredients": [
+    { "itemId": 10, "quantity": 3 },
+    { "itemId": 3, "quantity": 1 }
+  ]
+}
+```
+
+Response `201 Created`, with the header `Location: http://localhost:5080/api/recipes/13`:
+
+```json
+{
+  "id": 13,
+  "outputItemId": 20,
+  "outputItemName": "Steel Ingot",
+  "outputQuantity": 2,
+  "craftSeconds": 15,
+  "ingredients": [
+    { "itemId": 3, "itemName": "Coal", "quantity": 1 },
+    { "itemId": 10, "itemName": "Iron Ingot", "quantity": 3 }
+  ]
+}
+```
+
+`GET /api/items/20` now reports `"kind": "crafted"`. Nothing was written to the item: its kind is worked out from the recipe.
+
+### Update: replace a recipe
+
+```http
+PUT /api/recipes/13
+Content-Type: application/json
+
+{
+  "outputQuantity": 3,
+  "craftSeconds": 20,
+  "ingredients": [
+    { "itemId": 10, "quantity": 4 },
+    { "itemId": 2, "quantity": 1 }
+  ]
+}
+```
+
+Response `200 OK`:
+
+```json
+{
+  "id": 13,
+  "outputItemId": 20,
+  "outputItemName": "Steel Ingot",
+  "outputQuantity": 3,
+  "craftSeconds": 20,
+  "ingredients": [
+    { "itemId": 10, "itemName": "Iron Ingot", "quantity": 4 },
+    { "itemId": 2, "itemName": "Iron Ore", "quantity": 1 }
+  ]
+}
+```
+
+The list that is sent becomes the whole list. Coal was left out, so it was removed.
+
+### Delete a recipe
+
+```http
+DELETE /api/recipes/13
+```
+
+Response `204 No Content`. The item it made is kept and becomes raw. Recipes that use that item are not affected.
+
+## Ingredients
+
+These endpoints change one line of a recipe and leave the rest alone.
+
+### List a recipe's ingredients
+
+```http
+GET /api/recipes/13/ingredients
+```
+
+Response `200 OK`:
+
+```json
+[
+  { "itemId": 10, "itemName": "Iron Ingot", "quantity": 4 },
+  { "itemId": 2, "itemName": "Iron Ore", "quantity": 1 }
+]
+```
+
+### Add an ingredient, or change its quantity
+
+```http
+PUT /api/recipes/13/ingredients/3
+Content-Type: application/json
+
+{
+  "quantity": 2
+}
+```
+
+Response `201 Created` when the recipe did not use the item before:
+
+```json
+{ "itemId": 3, "itemName": "Coal", "quantity": 2 }
+```
+
+Sending the request again with a different quantity returns `200 OK` with the new quantity. One address does both jobs, so a caller never has to check first whether the ingredient is already there.
+
+### Remove an ingredient
+
+```http
+DELETE /api/recipes/13/ingredients/3
+```
+
+Response `204 No Content`.
+
+| | Replace the recipe | Change one ingredient |
+|---|---|---|
+| Address | `PUT /api/recipes/{id}` | `PUT /api/recipes/{id}/ingredients/{itemId}` |
+| Other ingredients | Removed unless they are sent again | Kept |
+| Use it to | Save a whole recipe form | Adjust one line |
+
 ## Rejections
 
 Every rejection uses the Problem Details format, with the content type `application/problem+json`.
@@ -324,3 +513,126 @@ DELETE /api/items/9
 ```
 
 The extra `usedIn` field lists what depends on the item, so a program can act on it without reading the sentence in `detail`.
+
+### 400: problems inside a list
+
+```http
+POST /api/recipes
+Content-Type: application/json
+
+{
+  "outputItemId": 21,
+  "ingredients": [
+    { "itemId": 3, "quantity": 1 },
+    { "itemId": 3, "quantity": 2 },
+    { "itemId": 777, "quantity": 1 }
+  ]
+}
+```
+
+```json
+{
+  "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+  "title": "One or more validation errors occurred.",
+  "status": 400,
+  "errors": {
+    "ingredients[1].itemId": ["Item 3 is listed more than once. List each item once, with its total quantity."],
+    "ingredients[2].itemId": ["There is no item with id 777."]
+  },
+  "traceId": "00-1c62714401c490f851f3eee70e9a130c-6eab3d79b338978b-00"
+}
+```
+
+Each problem is reported against its position in the list, counting from 0. Every problem is reported at once, so the caller can fix them in one pass.
+
+### 409: the recipe would loop
+
+The sample data says a Stick is made from Planks. This request tries to make Planks from Sticks:
+
+```http
+PUT /api/recipes/1
+Content-Type: application/json
+
+{
+  "outputQuantity": 2,
+  "ingredients": [
+    { "itemId": 9, "quantity": 1 }
+  ]
+}
+```
+
+```json
+{
+  "type": "https://tools.ietf.org/html/rfc9110#section-15.5.10",
+  "title": "The recipe would loop",
+  "status": 409,
+  "detail": "These ingredients would create a loop: \"Plank\" needs \"Stick\", and \"Stick\" needs \"Plank\".",
+  "traceId": "00-39fa2f9beeb2699a97012831281b1592-4872561e724db073-00",
+  "loop": ["Plank", "Stick", "Plank"]
+}
+```
+
+The `loop` field shows the chain, in which each item needs the next. Loops are found at any depth. Trying to make a Log from a Tool Kit returns:
+
+```json
+"loop": ["Log", "Tool Kit", "Sword", "Stick", "Plank", "Log"]
+```
+
+### 409: the item already has a recipe
+
+```http
+POST /api/recipes
+Content-Type: application/json
+
+{
+  "outputItemId": 20,
+  "ingredients": [
+    { "itemId": 3, "quantity": 1 }
+  ]
+}
+```
+
+```json
+{
+  "type": "https://tools.ietf.org/html/rfc9110#section-15.5.10",
+  "title": "The item already has a recipe",
+  "status": 409,
+  "detail": "\"Steel Ingot\" is already made by recipe 13. An item has one recipe, so replace that recipe instead of creating another.",
+  "traceId": "00-5c03fa6c8d872cc5c0aa5c8657646918-00b1fd3cc4595928-00",
+  "recipeId": 13
+}
+```
+
+The `recipeId` field gives the recipe to replace.
+
+### 409: the recipe needs an ingredient
+
+```http
+DELETE /api/recipes/13/ingredients/10
+```
+
+```json
+{
+  "type": "https://tools.ietf.org/html/rfc9110#section-15.5.10",
+  "title": "The recipe needs an ingredient",
+  "status": 409,
+  "detail": "Item 10 is the only ingredient of recipe 13, and a recipe needs at least one. To remove it, delete the recipe.",
+  "traceId": "00-b245f0da41069bccd65c728dd1776472-ca32002e2a1c88ea-00"
+}
+```
+
+## Every rejection at a glance
+
+| Status | Title | Returned when |
+|---|---|---|
+| 400 | One or more validation errors occurred. | A field is missing, out of range, or refers to an item that does not exist |
+| 404 | The item was not found | No item has the id in the address |
+| 404 | The recipe was not found | No recipe has the id in the address |
+| 404 | The ingredient was not found | The recipe does not use that item |
+| 404 | Not Found | The address does not exist |
+| 409 | The name is already in use | Another item has that name |
+| 409 | The item is in use | Other recipes use the item as an ingredient |
+| 409 | The item already has a recipe | A second recipe was created for one item |
+| 409 | The recipe would loop | An ingredient leads back to the item being made |
+| 409 | The recipe needs an ingredient | The last ingredient was removed |
+| 409 | The recipe is full | A 21st ingredient was added |

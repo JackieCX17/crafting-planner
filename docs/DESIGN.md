@@ -82,7 +82,7 @@ erDiagram
 | Recipe | Id | whole number | Set by the database |
 | Recipe | OutputItemId | whole number | Required, must be an existing item, one recipe per item |
 | Recipe | OutputQuantity | whole number | 1 to 1,000. How many units one craft makes |
-| Recipe | CraftSeconds | whole number | 0 or more. Time for one craft |
+| Recipe | CraftSeconds | whole number | 0 to 86,400, which is one day. Time for one craft |
 | RecipeIngredient | RecipeId, ItemId | whole numbers | Together they identify the row, so an item appears once per recipe |
 | RecipeIngredient | Quantity | whole number | 1 to 1,000. Units used by one craft |
 
@@ -94,10 +94,12 @@ erDiagram
 |---|---|
 | Required fields present, values within range | 400 Bad Request |
 | Every ingredient refers to an existing item | 400 Bad Request |
-| A recipe has at least one ingredient | 400 Bad Request |
+| A recipe is created with 1 to 20 ingredients, each item listed once | 400 Bad Request |
 | Item names are unique | 409 Conflict |
 | An item has at most one recipe | 409 Conflict |
-| A recipe cannot need its own output, directly or through other recipes | 409 Conflict |
+| A recipe cannot need its own output, directly or through other recipes | 409 Conflict, showing the loop |
+| A recipe's only ingredient cannot be removed | 409 Conflict |
+| A recipe with 20 ingredients cannot take another | 409 Conflict |
 | An item used as an ingredient cannot be deleted | 409 Conflict, listing the recipes that use it |
 | The item or recipe in the address exists | 404 Not Found |
 | Plan quantity is between 1 and 1,000,000 | 400 Bad Request |
@@ -112,6 +114,11 @@ Every rejection uses the same standard error format (Problem Details), with a sh
 | Deleting an in-use item is blocked, not cascaded | Cascading would silently break every recipe that depends on it |
 | Deleting an item also deletes its own recipe | A recipe has no meaning without the item it makes |
 | 400 means the request itself is wrong; 409 means it clashes with existing data | Callers can tell "fix your input" apart from "the data has to change first" |
+| The item a recipe makes cannot be changed | Changing it would turn one item raw and another crafted in a single step. Deleting the recipe and creating a new one makes both effects visible |
+| Deleting a recipe keeps the item it made | Other recipes may use that item as an ingredient. It becomes raw, and they keep working |
+| The loop search uses a queue, not a function that calls itself | A long chain of recipes cannot crash the app by nesting calls too deeply |
+| The loop search visits the nearest items first | The loop reported to the caller is the shortest one, which is the easiest to understand and fix |
+| A recipe has at most 20 ingredients | Keeps one request from creating an unreasonable amount of work |
 
 ## 5. The planning calculation
 

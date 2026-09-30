@@ -68,3 +68,130 @@ GET {{baseUrl}}/api/items/9999
 
 ### Rejected: other recipes use the item as an ingredient (409)
 DELETE {{baseUrl}}/api/items/9
+
+# ---------------------------------------------------------------------------
+# Recipes
+# ---------------------------------------------------------------------------
+
+### List recipes
+GET {{baseUrl}}/api/recipes
+
+### List the recipes that use Stick (item 9) as an ingredient
+GET {{baseUrl}}/api/recipes?uses=9
+
+### Get one recipe
+GET {{baseUrl}}/api/recipes/4
+
+### Insert, step 1: create the item the recipe will make
+POST {{baseUrl}}/api/items
+Content-Type: application/json
+
+{
+  "name": "Steel Ingot",
+  "category": "Component"
+}
+
+### Insert, step 2: create its recipe (use the id returned by step 1)
+POST {{baseUrl}}/api/recipes
+Content-Type: application/json
+
+{
+  "outputItemId": 20,
+  "outputQuantity": 2,
+  "craftSeconds": 15,
+  "ingredients": [
+    { "itemId": 10, "quantity": 3 },
+    { "itemId": 3, "quantity": 1 }
+  ]
+}
+
+### Update: replace the recipe (use the id returned by step 2)
+PUT {{baseUrl}}/api/recipes/13
+Content-Type: application/json
+
+{
+  "outputQuantity": 3,
+  "craftSeconds": 20,
+  "ingredients": [
+    { "itemId": 10, "quantity": 4 },
+    { "itemId": 2, "quantity": 1 }
+  ]
+}
+
+### Delete the recipe. The item is kept and becomes raw
+DELETE {{baseUrl}}/api/recipes/13
+
+### Rejected: the item already has a recipe (409)
+POST {{baseUrl}}/api/recipes
+Content-Type: application/json
+
+{
+  "outputItemId": 9,
+  "ingredients": [
+    { "itemId": 1, "quantity": 1 }
+  ]
+}
+
+### Rejected: an item listed twice, and an item that does not exist (400)
+POST {{baseUrl}}/api/recipes
+Content-Type: application/json
+
+{
+  "outputItemId": 1,
+  "ingredients": [
+    { "itemId": 3, "quantity": 1 },
+    { "itemId": 3, "quantity": 2 },
+    { "itemId": 777, "quantity": 1 }
+  ]
+}
+
+### Rejected: Planks made from Sticks would loop, because Sticks are made from Planks (409)
+PUT {{baseUrl}}/api/recipes/1
+Content-Type: application/json
+
+{
+  "outputQuantity": 2,
+  "ingredients": [
+    { "itemId": 9, "quantity": 1 }
+  ]
+}
+
+### Rejected: a loop five recipes deep (409)
+POST {{baseUrl}}/api/recipes
+Content-Type: application/json
+
+{
+  "outputItemId": 1,
+  "ingredients": [
+    { "itemId": 18, "quantity": 1 }
+  ]
+}
+
+# ---------------------------------------------------------------------------
+# Ingredients
+# ---------------------------------------------------------------------------
+
+### List the ingredients of the Sword recipe
+GET {{baseUrl}}/api/recipes/4/ingredients
+
+### Add Coal (item 3) to the Sword recipe. Returns 201
+PUT {{baseUrl}}/api/recipes/4/ingredients/3
+Content-Type: application/json
+
+{
+  "quantity": 1
+}
+
+### Change its quantity. Same address, returns 200
+PUT {{baseUrl}}/api/recipes/4/ingredients/3
+Content-Type: application/json
+
+{
+  "quantity": 2
+}
+
+### Remove it again
+DELETE {{baseUrl}}/api/recipes/4/ingredients/3
+
+### Rejected: the only ingredient of a recipe cannot be removed (409)
+DELETE {{baseUrl}}/api/recipes/1/ingredients/1
