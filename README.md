@@ -17,7 +17,9 @@ The crafting theme is inspired by games such as Minecraft. The same logic is use
 | 3 | Planning calculation, with automated tests | Done |
 | 4 | Recipe tree, summaries, export | Done |
 | 5 | Website | Done |
-| 6 | Endpoint tests, data dictionary, demo script | Next |
+| 6 | Endpoint tests, data dictionary, walkthrough | Done |
+
+All six planned stages are complete. The optional seventh (stock on hand, a craft action, a hosted demo) is listed under future work in the design document.
 
 ## Run it
 
@@ -42,7 +44,12 @@ To start again with fresh sample data, stop the app and delete `src/CraftingPlan
 dotnet test
 ```
 
-The tests hold the planning calculation to the worked example in the design document and to cases that catch specific mistakes, and cover the tree builder, chain depths, and the CSV export. The same calculation cases are run against the Python prototype with `py prototype/test_plan.py`.
+69 tests in two kinds:
+
+- **Unit tests** hold the planning calculation to the worked example in the design document and to cases that catch specific mistakes, and cover the loop-free tree builder, chain depths, and the CSV export.
+- **Endpoint tests** start the real app in memory on a fresh database and call it the way a client would: every kind of operation, every kind of rejection, the export download, the API description, and the website.
+
+The same calculation cases are run against the Python prototype with `py prototype/test_plan.py`.
 
 ## The website
 
@@ -83,11 +90,20 @@ On the interactive API page, open an endpoint, choose **Try it out**, then **Exe
 
 | Document | Contents |
 |---|---|
+| [Walkthrough](docs/WALKTHROUGH.md) | A five-minute route through everything the project demonstrates. Start here |
 | [Design document](docs/DESIGN.md) | Requirements, data model, rules, and the reasons behind each decision |
 | [API guide](docs/API-GUIDE.md) | Every operation with an example request and response |
-| Interactive API page | Live reference, generated from the comments in the code |
+| [Data dictionary](docs/DATA-DICTIONARY.md) | Every table and field, which rules live where, and the SQL that creates the tables |
+| Interactive API page | Live reference at `/swagger`, generated from the comments in the code |
 
 Every public class, function, and field in the C# code has a structured comment, and the build fails if one is missing. Every function in the website's JavaScript has one too.
+
+## How it was built
+
+1. The [design document](docs/DESIGN.md) was written first, before any code, and merged as the repository's first pull request.
+2. Each stage in its build plan became one branch and one pull request, merged into `main` only when it ran and its documentation was complete.
+3. The planning calculation was [prototyped in Python](prototype/README.md), then translated to C#, with tests holding both to the same answers.
+4. Decisions made during the build were added to the design document with their reasons, including one correction to the original plan.
 
 ## Layout
 

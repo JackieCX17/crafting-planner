@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| **Status** | Draft 1, written before any code |
-| **Date** | 2026-09-28 |
+| **Status** | Written before any code on 2026-09-28. Updated during the build as decisions were made; each addition is marked with its reason. All six planned stages are complete |
+| **Date** | 2026-09-28, last updated 2026-09-30 |
 | **Stack** | C# on .NET 10, ASP.NET Core Web API, SQLite, plain HTML and JavaScript |
 
 ## 1. Purpose
@@ -27,7 +27,7 @@ The crafting theme is inspired by games such as Minecraft, where tools are built
 | M5 | A website that uses the API for everything it shows and changes |
 | M6 | Documentation for every endpoint, class, function, and data field |
 | M7 | Runs on a reviewer's machine with one command and no database setup |
-| M8 | Automated tests for the calculation and the main endpoints |
+| M8 | Automated tests for the calculation and the endpoints |
 
 ### Nice to have
 
@@ -297,7 +297,7 @@ Each stage ends with something that runs, and with its documentation complete.
 | 3 | Planning calculation: Python prototype first, then the C# version and the plan endpoint, with automated tests holding both to the same answers |
 | 4 | Tree, stats, and export |
 | 5 | Website, as described in section 7 |
-| 6 | Tests of the endpoints themselves, data dictionary, demo script, final README |
+| 6 | Tests of the endpoints themselves, data dictionary, walkthrough, final README |
 | 7 | Optional: stock on hand, craft action, hosted demo |
 
 ## 11. Future work
