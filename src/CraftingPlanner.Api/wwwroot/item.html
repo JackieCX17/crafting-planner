@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Item | Crafting Planner</title>
+  <link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="inner">
+      <a class="brand" href="index.html">Crafting Planner</a>
+      <nav class="site-nav">
+        <a href="index.html">Home</a>
+        <a href="items.html">Items</a>
+        <a href="plan.html">Plan</a>
+        <a href="swagger/index.html">API docs</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="toolbar">
+      <div>
+        <h1 id="title">Item</h1>
+        <p class="lead" id="subtitle"></p>
+      </div>
+      <div class="actions">
+        <a id="plan-link" class="btn" href="#">Plan this item</a>
+      </div>
+    </div>
+
+    <div id="page-notice" class="notice"></div>
+
+    <div id="content" class="hidden">
+      <div class="grid">
+        <div class="card">
+          <h2>Details</h2>
+          <form id="details-form">
+            <label>Name
+              <input id="name" required maxlength="80">
+            </label>
+            <label>Category
+              <input id="category" maxlength="40">
+            </label>
+            <label>Description
+              <textarea id="description" maxlength="500" rows="3"></textarea>
+            </label>
+            <div class="actions" style="margin-top: 12px">
+              <button class="btn" type="submit">Save details</button>
+              <button id="delete-item" class="btn danger" type="button">Delete item</button>
+            </div>
+          </form>
+          <div id="details-notice" class="notice"></div>
+        </div>
+
+        <div class="card">
+          <h2>Used in</h2>
+          <div id="used-in"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="toolbar">
+          <h2 id="recipe-title">Recipe</h2>
+          <div class="actions" id="recipe-actions"></div>
+        </div>
+        <p id="recipe-summary" class="muted"></p>
+        <form id="recipe-form" class="hidden">
+          <div class="row" style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px">
+            <label>Makes per craft
+              <input id="output-quantity" type="number" min="1" max="1000" value="1" required>
+            </label>
+            <label>Seconds per craft
+              <input id="craft-seconds" type="number" min="0" max="86400" value="0" required>
+            </label>
+          </div>
+          <div class="muted" style="font-size: 14px; margin-bottom: 6px">Ingredients, per craft</div>
+          <div id="ingredients"></div>
+          <div class="actions">
+            <button id="add-ingredient" class="btn secondary small" type="button">Add ingredient</button>
+          </div>
+          <div class="actions" style="margin-top: 12px">
+            <button class="btn" type="submit">Save recipe</button>
+            <button id="cancel-recipe" class="btn secondary" type="button">Cancel</button>
+          </div>
+        </form>
+        <div id="recipe-notice" class="notice"></div>
+      </div>
+
+      <div class="card" id="tree-card">
+        <h2>Recipe tree</h2>
+        <p class="muted">What this item is made from, down to the raw materials. Quantities are per single craft of the item above.</p>
+        <div id="tree"></div>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/ui.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/item.js"></script>
+</body>
+</html>
