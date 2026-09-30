@@ -2,4 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/CraftingPlanner.Api/CraftingPlanner.Api.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/CraftingPlanner.Tests/CraftingPlanner.Tests.csproj" />
+  </Folder>
 </Solution>
