@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Crafting Planner</title>
+  <link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="inner">
+      <a class="brand" href="index.html">Crafting Planner</a>
+      <nav class="site-nav">
+        <a href="index.html">Home</a>
+        <a href="items.html">Items</a>
+        <a href="plan.html">Plan</a>
+        <a href="swagger/index.html">API docs</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <h1>Crafting Planner</h1>
+    <p class="lead">To make something, what do you need? Items are made from other items, which are made from other items. The planner keeps the recipes and works out the totals.</p>
+
+    <div id="notice" class="notice"></div>
+
+    <div class="grid" id="stats"></div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>Make a plan</h2>
+        <p class="muted">Pick an item and a quantity. Get the raw materials to gather and the crafting steps in order.</p>
+        <a class="btn" href="plan.html">Go to Plan</a>
+      </div>
+      <div class="card">
+        <h2>Manage items and recipes</h2>
+        <p class="muted">Add items, give them recipes, and see what each item is used in.</p>
+        <a class="btn secondary" href="items.html">Go to Items</a>
+      </div>
+      <div class="card">
+        <h2>For developers</h2>
+        <p class="muted">Everything this site does goes through the API. The interactive documentation lets you try every endpoint.</p>
+        <a class="btn secondary" href="swagger/index.html">Open the API docs</a>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/ui.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/home.js"></script>
+</body>
+</html>

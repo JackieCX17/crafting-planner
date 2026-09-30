@@ -70,8 +70,10 @@ app.UseSwaggerUI(options =>
     options.DocumentTitle = "Crafting Planner API";
 });
 
-// Until the website is built, the home address opens the interactive API page.
-app.MapGet("/", () => Results.Redirect("/swagger")).ExcludeFromDescription();
+// The website is plain files in the wwwroot folder. "/" opens index.html.
+// The pages reach the backend only through the API, like any other caller.
+app.UseDefaultFiles();
+app.UseStaticFiles();
 
 app.MapControllers();
 

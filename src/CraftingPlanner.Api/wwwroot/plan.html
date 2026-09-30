@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Plan | Crafting Planner</title>
+  <link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="inner">
+      <a class="brand" href="index.html">Crafting Planner</a>
+      <nav class="site-nav">
+        <a href="index.html">Home</a>
+        <a href="items.html">Items</a>
+        <a href="plan.html">Plan</a>
+        <a href="swagger/index.html">API docs</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <h1>Plan</h1>
+    <p class="lead">Pick an item and how many you want. The plan lists the raw materials to gather and the crafting steps in order.</p>
+
+    <div class="card">
+      <form id="plan-form" class="row">
+        <label>Item
+          <select id="item" required></select>
+        </label>
+        <label>Quantity
+          <input id="quantity" type="number" min="1" max="1000000" value="1" required>
+        </label>
+        <button class="btn" type="submit">Make the plan</button>
+      </form>
+      <div id="notice" class="notice"></div>
+    </div>
+
+    <div id="result" class="hidden">
+      <div class="toolbar">
+        <h2 id="result-title"></h2>
+        <div class="actions">
+          <a id="download" class="btn secondary small" href="#">Download as CSV</a>
+          <a id="item-page" class="btn secondary small" href="#">Item details</a>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <h2>Raw materials to gather</h2>
+          <div id="raw"></div>
+        </div>
+        <div class="card stat">
+          <div class="value" id="total-time"></div>
+          <div class="label">Total crafting time</div>
+          <p class="muted" id="step-count"></p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Crafting steps, in order</h2>
+        <p class="muted">Each step comes after the steps it depends on. "Left over" is what a recipe makes beyond what is needed.</p>
+        <div id="steps"></div>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/ui.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/plan.js"></script>
+</body>
+</html>

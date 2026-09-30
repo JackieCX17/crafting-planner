@@ -238,7 +238,29 @@ All addresses start with `/api`. Requests and responses use JSON.
 | Export | Plan export |
 | State-changing action | Craft (nice to have N2) |
 
-## 7. Technology choices
+## 7. Website
+
+Four pages of plain HTML, CSS, and JavaScript, served by the same app from its `wwwroot` folder.
+
+| Page | Purpose | API it uses |
+|---|---|---|
+| Home | Totals and highlights, and the way in to each page | Stats |
+| Plan | Pick an item and a quantity; show the raw materials, the steps in order, the total time; download as CSV | Items list, plan, export |
+| Items | Search, filter, sort, and page through items; add and delete | Items |
+| Item | Edit details; create, edit, or delete the recipe; see what the item is used in; view the recipe tree | Items, recipes, tree |
+
+### Rules the pages follow
+
+| Rule | Reason |
+|---|---|
+| Every page reaches the backend only through the API, via one shared `request` function | The website is a client like any other. A reviewer can watch its calls in the browser's network panel and see the same requests the API page makes |
+| Rejections from the API are shown on the page as they arrive: title, explanation, and the fields at fault | The backend is the single source of the rules. The pages do not repeat them, so they cannot drift from them |
+| Text goes into the page through `textContent`, never `innerHTML` | An item name can never be mistaken for HTML |
+| No framework and no build step | A reviewer runs one command and reads plain files. The trade-off, more hand-written code than a framework would need, is acceptable at four pages |
+| Colours are defined once as variables, with a second set for dark mode | The site follows the reader's system setting without any extra code |
+| Every JavaScript function has a structured comment | The same documentation standard as the C# code |
+
+## 8. Technology choices
 
 | Choice | Reason |
 |---|---|
@@ -252,7 +274,7 @@ All addresses start with `/api`. Requests and responses use JSON.
 | Plain HTTP on the local machine | Avoids certificate prompts for the reviewer. A hosted version would use HTTPS |
 | xUnit for tests | Standard C# test library |
 
-## 8. Documentation standard
+## 9. Documentation standard
 
 | Layer | Standard |
 |---|---|
@@ -264,7 +286,7 @@ All addresses start with `/api`. Requests and responses use JSON.
 | README | What the app is, how to run it, and a short tour |
 | This document | Requirements, decisions, and reasons, updated when a decision changes |
 
-## 9. Build stages
+## 10. Build stages
 
 Each stage ends with something that runs, and with its documentation complete.
 
@@ -274,11 +296,11 @@ Each stage ends with something that runs, and with its documentation complete.
 | 2 | Recipes and ingredients API, all rules from section 4 |
 | 3 | Planning calculation: Python prototype first, then the C# version and the plan endpoint, with automated tests holding both to the same answers |
 | 4 | Tree, stats, and export |
-| 5 | Website |
-| 6 | Tests, README, API guide, data dictionary, demo script |
+| 5 | Website, as described in section 7 |
+| 6 | Tests of the endpoints themselves, data dictionary, demo script, final README |
 | 7 | Optional: stock on hand, craft action, hosted demo |
 
-## 10. Future work
+## 11. Future work
 
 - Stock on hand and the craft action, if not completed in stage 7
 - Several recipes per item, with a choice of cheapest or fastest
