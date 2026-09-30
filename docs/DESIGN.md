@@ -103,6 +103,7 @@ erDiagram
 | An item used as an ingredient cannot be deleted | 409 Conflict, listing the recipes that use it |
 | The item or recipe in the address exists | 404 Not Found |
 | Plan quantity is between 1 and 1,000,000 | 400 Bad Request |
+| Every total in a plan fits in a 64-bit whole number | 400 Bad Request, naming the item |
 
 Every rejection uses the same standard error format (Problem Details), with a short title, a plain explanation, and the field at fault where one applies.
 
@@ -173,7 +174,11 @@ Rounding each branch separately makes 8 Sticks when 4 would do, and doubles the 
 
 ### Limits
 
-Totals use 64-bit whole numbers, and the plan quantity is capped at 1,000,000, so long chains of large recipes cannot overflow.
+Totals use 64-bit whole numbers, and the plan quantity is capped at 1,000,000. That is enough for any realistic data, but not for every possible data set: a chain of recipes that each need 1,000 of the next exceeds 64 bits within six levels. So the arithmetic is checked, and a plan whose totals would not fit is refused with a 400 response that names the item, rather than silently returning a wrong number.
+
+### Implementation notes
+
+The calculation was written in Python first (`prototype/plan.py`), then translated to C# (`PlanCalculator`). Both are checked against the same cases. They differ in one deliberate way: the prototype builds its order with a function that calls itself, which is the most natural way to write it, while the C# version counts users with a queue, so a very long chain of recipes from user data cannot exhaust the stack. The loop search makes the same choice for the same reason.
 
 ## 6. API
 
@@ -265,7 +270,7 @@ Each stage ends with something that runs, and with its documentation complete.
 |---|---|
 | 1 | Project skeleton, database, Items API, interactive API page |
 | 2 | Recipes and ingredients API, all rules from section 4 |
-| 3 | Planning calculation: Python prototype first, then the C# version checked against it |
+| 3 | Planning calculation: Python prototype first, then the C# version and the plan endpoint, with automated tests holding both to the same answers |
 | 4 | Tree, stats, and export |
 | 5 | Website |
 | 6 | Tests, README, API guide, data dictionary, demo script |

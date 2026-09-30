@@ -2,6 +2,9 @@
 bin/
 obj/
 
+# Python cache, created when the prototype runs
+__pycache__/
+
 # Local database, created on first run
 *.db
 *.db-shm

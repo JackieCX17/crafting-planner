@@ -2,13 +2,14 @@
 
 This guide shows every operation with an example request and the response it returns. The interactive API page at <http://localhost:5080/swagger> is the live reference. This guide is the walkthrough.
 
-**Covered so far:** items, recipes, and ingredients (stages 1 and 2). Planning and summaries are added in later stages.
+**Covered so far:** items, recipes, ingredients, and planning (stages 1 to 3). The recipe tree, summaries, and export are added in stage 4.
 
 | Section | Contents |
 |---|---|
 | [Items](#items) | Things that can be crafted or used as ingredients |
 | [Recipes](#recipes) | What goes into an item, and how many come out |
 | [Ingredients](#ingredients) | Changing one line of a recipe |
+| [Planning](#planning) | What it takes to make a quantity of an item |
 | [Rejections](#rejections) | The error format, with an example of each kind |
 
 ## Basics
@@ -401,6 +402,74 @@ Response `204 No Content`.
 | Other ingredients | Removed unless they are sent again | Kept |
 | Use it to | Save a whole recipe form | Adjust one line |
 
+## Planning
+
+The question the app exists to answer: to make a quantity of an item, what does it take?
+
+### Plan an item
+
+```http
+GET /api/items/18/plan?quantity=3
+```
+
+| Parameter | Default | Meaning |
+|---|---|---|
+| `quantity` | `1` | How many units to make, 1 to 1,000,000 |
+
+Response `200 OK`:
+
+```json
+{
+  "itemId": 18,
+  "itemName": "Tool Kit",
+  "quantity": 3,
+  "rawMaterials": [
+    { "itemId": 3, "itemName": "Coal", "quantity": 15 },
+    { "itemId": 2, "itemName": "Iron Ore", "quantity": 30 },
+    { "itemId": 1, "itemName": "Log", "quantity": 3 }
+  ],
+  "steps": [
+    { "itemId": 8, "itemName": "Plank", "needed": 6, "crafts": 3, "made": 6, "leftover": 0, "seconds": 6 },
+    { "itemId": 10, "itemName": "Iron Ingot", "needed": 15, "crafts": 15, "made": 15, "leftover": 0, "seconds": 150 },
+    { "itemId": 9, "itemName": "Stick", "needed": 9, "crafts": 3, "made": 12, "leftover": 3, "seconds": 6 },
+    { "itemId": 12, "itemName": "Pickaxe", "needed": 3, "crafts": 3, "made": 3, "leftover": 0, "seconds": 24 },
+    { "itemId": 11, "itemName": "Sword", "needed": 3, "crafts": 3, "made": 3, "leftover": 0, "seconds": 24 },
+    { "itemId": 18, "itemName": "Tool Kit", "needed": 3, "crafts": 3, "made": 3, "leftover": 0, "seconds": 12 }
+  ],
+  "totalSeconds": 222
+}
+```
+
+How to read it:
+
+| Part | Meaning |
+|---|---|
+| `rawMaterials` | What to gather before starting, in name order |
+| `steps` | What to craft, in the order to craft it. Each step comes after the steps it depends on |
+| `needed` | Units required in total, by the target and by other steps |
+| `crafts` | Times to run the recipe: `needed` divided by the recipe's output, rounded up |
+| `made` and `leftover` | Sticks are made 4 at a time, so 9 needed means 3 crafts, 12 made, and 3 left over |
+| `seconds` | Time for all the crafts of that step. `totalSeconds` is the sum |
+
+Demand is totalled across every step before it is rounded. Sword and Pickaxe both need Sticks; rounding each separately would craft Sticks more often than necessary. Section 5 of the design document works through the numbers.
+
+For a raw item, the plan is just the item itself:
+
+```http
+GET /api/items/1/plan?quantity=5
+```
+
+```json
+{
+  "itemId": 1,
+  "itemName": "Log",
+  "quantity": 5,
+  "rawMaterials": [ { "itemId": 1, "itemName": "Log", "quantity": 5 } ],
+  "steps": [],
+  "totalSeconds": 0
+}
+```
+
 ## Rejections
 
 Every rejection uses the Problem Details format, with the content type `application/problem+json`.
@@ -626,6 +695,7 @@ DELETE /api/recipes/13/ingredients/10
 | Status | Title | Returned when |
 |---|---|---|
 | 400 | One or more validation errors occurred. | A field is missing, out of range, or refers to an item that does not exist |
+| 400 | The plan is too large | A total in the plan would not fit in a 64-bit number. The `itemId` field names the item. Try a smaller quantity |
 | 404 | The item was not found | No item has the id in the address |
 | 404 | The recipe was not found | No recipe has the id in the address |
 | 404 | The ingredient was not found | The recipe does not use that item |
