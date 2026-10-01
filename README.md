@@ -58,9 +58,9 @@ Plain HTML, CSS, and JavaScript, served by the same app. Every page reaches the 
 | Page | What it does |
 |---|---|
 | Home | Totals, the most used ingredient, the longest recipe chain, and the way in to each page |
-| Plan | Pick an item and a quantity. Get the raw materials, the crafting steps in order, the total time, and a CSV download |
+| Plan | Pick an item by search or category, and a quantity. Get the raw materials, the crafting steps in order, the total time, and a CSV download |
 | Items | Search, filter, sort, and page through items. Add and delete items |
-| Item | Edit an item's details, create or edit its recipe, see what it is used in, and view its recipe tree |
+| Item | Edit an item's details and picture, create or edit its recipe with a picker for ingredients, see what it is used in, and view its recipe tree |
 
 Rejections from the API appear on the page in plain words. Try giving Planks a recipe that uses Sticks, and the page explains the loop.
 

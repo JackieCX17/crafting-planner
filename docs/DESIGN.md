@@ -254,9 +254,13 @@ Four pages of plain HTML, CSS, and JavaScript, served by the same app from its `
 | Page | Purpose | API it uses |
 |---|---|---|
 | Home | Totals and highlights, and the way in to each page | Stats |
-| Plan | Pick an item and a quantity; show the raw materials, the steps in order, the total time; download as CSV | Items list, plan, export |
+| Plan | Pick an item with the picker and a quantity; show the raw materials, the steps in order, the total time; download as CSV | Items list, plan, export |
 | Items | Search, filter, sort, and page through items; add and delete | Items |
-| Item | Edit details; create, edit, or delete the recipe; see what the item is used in; view the recipe tree | Items, recipes, tree |
+| Item | Edit details and picture; create, edit, or delete the recipe, adding ingredients with the picker; see what the item is used in; view the recipe tree | Items, recipes, tree, icons |
+
+### The item picker (added after stage 6)
+
+Wherever a page needs the person to choose an item, it shows the same picker: a search box, a row of category chips, and the matching items with a button on each. It replaced plain dropdowns, which do not scale past a few dozen items and give no way to narrow by category. The picker filters in the browser from the full item list, which is right for hundreds of items; at thousands it would ask the API to search instead, and the list endpoint already supports that.
 
 ### Rules the pages follow
 
