@@ -103,7 +103,7 @@ public class PlanningEndpointTests(PlannerApp app) : IClassFixture<PlannerApp>
             .SelectMany(path => path.Value!.AsObject().Select(method => (Path: path.Key, Method: method.Key, Operation: method.Value)))
             .ToList();
 
-        Assert.Equal(18, operations.Count);
+        Assert.Equal(28, operations.Count);
         Assert.All(operations, operation => Assert.False(
             string.IsNullOrWhiteSpace((string?)operation.Operation!["summary"]),
             $"{operation.Method.ToUpperInvariant()} {operation.Path} has no summary"));
@@ -124,6 +124,22 @@ public class PlanningEndpointTests(PlannerApp app) : IClassFixture<PlannerApp>
         Assert.Equal(HttpStatusCode.OK, plan.StatusCode);
         Assert.Equal("text/javascript", script.Content.Headers.ContentType?.MediaType);
         Assert.Equal(HttpStatusCode.OK, swagger.StatusCode);
+    }
+
+    /// <summary>The icon list names each shipped picture with its author and address, and the sample items use them.</summary>
+    [Fact]
+    public async Task Icons_AreListedWithAuthors_AndSampleItemsUseThem()
+    {
+        var icons = await client.GetFromJsonAsync<List<IconInfo>>("/api/icons", Json);
+        var sword = await client.GetFromJsonAsync<ItemDetail>($"/api/items/{await IdOfAsync(client, "Sword")}", Json);
+        var file = await client.GetAsync("/icons/broadsword.svg");
+
+        Assert.NotNull(icons);
+        var broadsword = icons.Single(icon => icon.Name == "broadsword");
+        Assert.Equal(("Lorc", "/icons/broadsword.svg"), (broadsword.Author, broadsword.Url));
+        Assert.Equal("broadsword", sword?.Icon);
+        Assert.Equal(HttpStatusCode.OK, file.StatusCode);
+        Assert.Equal("image/svg+xml", file.Content.Headers.ContentType?.MediaType);
     }
 
     /// <summary>An address that does not exist is answered in the standard error format, not with an empty page.</summary>

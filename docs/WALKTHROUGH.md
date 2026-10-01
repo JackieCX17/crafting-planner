@@ -59,6 +59,12 @@ Open `docs/DESIGN.md`. Show the "Deliberately left out" table and the "Key decis
 
 What it shows: scope was chosen, not run out of. The rounding trap was found and solved at the design stage, before any code.
 
+## 8. Lists, if there is time (45 seconds)
+
+On the **Lists** page, create "Starter gear". On its page, add a Sword with quantity 2 and a Pickaxe with quantity 1 from the picker. The plan underneath redraws after each change.
+
+What it shows: the same calculation applied to several items at once, with shared ingredients totalled across the whole list before rounding: 4 Sticks in all is one craft of four, nothing left over. Point out that adding a Tool Kit to the same list counts the Sword once, with both shares added.
+
 ## If something goes wrong
 
 | Problem | Fix |

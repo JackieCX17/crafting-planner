@@ -27,7 +27,7 @@ async function loadItem() {
   }
 
   document.title = `${item.name} | Crafting Planner`;
-  document.getElementById("title").textContent = item.name;
+  document.getElementById("title").replaceChildren(itemIcon(item, true), item.name);
   document.getElementById("subtitle").replaceChildren(
     kindTag(item.kind),
     item.category ? ` · ${item.category}` : "",
@@ -37,12 +37,50 @@ async function loadItem() {
   document.getElementById("name").value = item.name;
   document.getElementById("category").value = item.category || "";
   document.getElementById("description").value = item.description || "";
+  await fillIconSelect(item.icon);
 
   drawUsedIn();
+  drawOnLists();
   drawRecipe();
   await drawTree();
 
   document.getElementById("content").classList.remove("hidden");
+
+  // item.html?id=5&edit=recipe opens the recipe editor straight away.
+  if (queryParam("edit") === "recipe") {
+    openEditor();
+    history.replaceState(null, "", `item.html?id=${item.id}`);
+  }
+}
+
+/** The icons the website ships with, loaded once. */
+let iconCatalog = null;
+
+/**
+ * Fills the icon select box from the API's list of icons, with a "none" choice first,
+ * and shows a preview of the chosen one next to it.
+ * @param {string|null} selected The item's current icon name.
+ */
+async function fillIconSelect(selected) {
+  const select = document.getElementById("icon");
+  iconCatalog ??= await api.get("/api/icons");
+
+  select.replaceChildren(
+    el("option", { value: "" }, "None (use the category's)"),
+    ...iconCatalog.map((icon) => el("option", { value: icon.name }, `${icon.name} (by ${icon.author})`)),
+  );
+  select.value = selected || "";
+  previewIcon();
+}
+
+/**
+ * Shows the icon chosen in the select box, so a choice can be seen before it is saved.
+ */
+function previewIcon() {
+  const chosen = document.getElementById("icon").value;
+  document.getElementById("icon-preview").replaceChildren(
+    itemIcon({ icon: chosen || null, category: document.getElementById("category").value }, true),
+  );
 }
 
 /**
@@ -57,9 +95,35 @@ function drawUsedIn() {
   panel.replaceChildren(
     table(
       [{ text: "Item" }, { text: "Per craft", num: true }],
-      item.usedIn.map((use) => [itemLink(use.itemId, use.itemName), use.quantity]),
+      item.usedIn.map((use) => [itemLink(use.itemId, use.itemName, lookupItem(use.itemId)), use.quantity]),
     ),
   );
+}
+
+/**
+ * Draws the shopping lists this item is on.
+ */
+function drawOnLists() {
+  const panel = document.getElementById("on-lists");
+  if (item.onLists.length === 0) {
+    panel.replaceChildren(el("p", { class: "muted" }, "Not on any list."));
+    return;
+  }
+  panel.replaceChildren(
+    table(
+      [{ text: "List" }, { text: "Quantity", num: true }],
+      item.onLists.map((use) => [el("a", { href: `list.html?id=${use.listId}` }, use.listName), use.quantity]),
+    ),
+  );
+}
+
+/**
+ * Finds an item in the list of all items, for its icon and category.
+ * @param {number} id The item's id.
+ * @returns {object|null} The item, or null when it is not in the list.
+ */
+function lookupItem(id) {
+  return allItems.find((candidate) => candidate.id === id) || null;
 }
 
 /**
@@ -93,6 +157,9 @@ function drawRecipe() {
   actions.replaceChildren(edit, remove);
 }
 
+/** The picker used to add ingredients. Built once the editor first opens. */
+let ingredientPicker = null;
+
 /**
  * Shows the recipe editor, filled from the current recipe or empty for a new one.
  */
@@ -102,32 +169,71 @@ function openEditor() {
   document.getElementById("craft-seconds").value = item.recipe ? item.recipe.craftSeconds : 0;
 
   ingredientRows.replaceChildren();
-  if (item.recipe) {
-    for (const line of item.recipe.ingredients) {
-      addIngredientRow(line.itemId, line.quantity);
-    }
-  } else {
-    addIngredientRow();
+  for (const line of item.recipe ? item.recipe.ingredients : []) {
+    addIngredientRow(line.itemId, line.quantity);
   }
 
+  // An item cannot be its own ingredient, so it is left out of the picker.
+  const candidates = allItems.filter((candidate) => candidate.id !== item.id);
+  if (ingredientPicker === null) {
+    ingredientPicker = createPicker({
+      items: candidates,
+      buttonText: "Add",
+      isDisabled: (candidate) => rowFor(candidate.id) !== null,
+      onPick: (candidate) => {
+        addIngredientRow(candidate.id, 1);
+        ingredientPicker.refresh();
+        rowFor(candidate.id).querySelector("input").focus();
+      },
+    });
+    document.getElementById("ingredient-picker").replaceChildren(ingredientPicker.element);
+  } else {
+    ingredientPicker.refresh(candidates);
+  }
+
+  updateEmptyNote();
   recipeForm.classList.remove("hidden");
 }
 
 /**
- * Adds one ingredient row to the editor: an item to pick, a quantity, and a remove button.
- * @param {number|null} [selectedId] The item to select, or null for the first item.
- * @param {number} [quantity] The quantity to show.
+ * Finds the editor row for an item.
+ * @param {number} id The item's id.
+ * @returns {HTMLElement|null} The row, or null when the item is not in the recipe.
  */
-function addIngredientRow(selectedId = null, quantity = 1) {
-  const select = el("select", { required: true });
-  // An item cannot be its own ingredient, so it is left out of the list.
-  fillItemSelect(select, allItems.filter((candidate) => candidate.id !== item.id), selectedId);
+function rowFor(id) {
+  return ingredientRows.querySelector(`.ingredient-row[data-item-id="${id}"]`);
+}
 
-  const input = el("input", { type: "number", min: 1, max: 1000, value: quantity, required: true });
+/**
+ * Shows or hides the "no ingredients yet" note.
+ */
+function updateEmptyNote() {
+  document.getElementById("no-ingredients").classList.toggle("hidden", ingredientRows.children.length > 0);
+}
+
+/**
+ * Adds one ingredient row to the editor: the item's icon and name, a quantity, and a remove button.
+ * @param {number} id The ingredient item's id.
+ * @param {number} quantity The quantity to show.
+ */
+function addIngredientRow(id, quantity) {
+  const ingredient = lookupItem(id) || { id, name: `Item ${id}`, category: null, icon: null };
+  const input = el("input", { type: "number", min: 1, max: 1000, value: quantity, required: true, "aria-label": `Quantity of ${ingredient.name}` });
   const remove = el("button", { class: "btn danger small", type: "button" }, "Remove");
-  const row = el("div", { class: "ingredient-row" }, select, input, remove);
-  remove.addEventListener("click", () => row.remove());
+  const row = el(
+    "div",
+    { class: "ingredient-row", "data-item-id": id },
+    el("span", { class: "ingredient-name" }, itemIcon(ingredient), ingredient.name),
+    input,
+    remove,
+  );
+  remove.addEventListener("click", () => {
+    row.remove();
+    updateEmptyNote();
+    ingredientPicker?.refresh();
+  });
   ingredientRows.appendChild(row);
+  updateEmptyNote();
 }
 
 /**
@@ -136,7 +242,7 @@ function addIngredientRow(selectedId = null, quantity = 1) {
  */
 function readEditor() {
   const ingredients = [...ingredientRows.querySelectorAll(".ingredient-row")].map((row) => ({
-    itemId: Number(row.querySelector("select").value),
+    itemId: Number(row.dataset.itemId),
     quantity: Number(row.querySelector("input").value),
   }));
 
@@ -199,6 +305,7 @@ async function saveDetails(event) {
     name: document.getElementById("name").value,
     category: document.getElementById("category").value,
     description: document.getElementById("description").value,
+    icon: document.getElementById("icon").value,
   };
 
   try {
@@ -215,7 +322,8 @@ async function saveDetails(event) {
  * other recipes still use the item, and the rejection lists them.
  */
 async function deleteItem() {
-  if (!window.confirm(`Delete "${item.name}"? Its own recipe is deleted with it.`)) {
+  const listNote = item.onLists.length > 0 ? ` It is also taken off ${item.onLists.length} list${item.onLists.length === 1 ? "" : "s"}.` : "";
+  if (!window.confirm(`Delete "${item.name}"? Its own recipe is deleted with it.${listNote}`)) {
     return;
   }
   try {
@@ -259,7 +367,8 @@ function treeBranch(node, isRoot) {
   if (!isRoot) {
     line.appendChild(el("span", { class: "qty" }, `${formatNumber(node.quantity)} ×`));
   }
-  line.appendChild(isRoot ? el("strong", {}, node.itemName) : itemLink(node.itemId, node.itemName));
+  const known = lookupItem(node.itemId);
+  line.appendChild(isRoot ? el("strong", {}, known ? itemIcon(known) : "", node.itemName) : itemLink(node.itemId, node.itemName, known));
   line.appendChild(document.createTextNode(" "));
   line.appendChild(kindTag(node.kind));
 
@@ -277,9 +386,10 @@ function treeBranch(node, isRoot) {
 }
 
 document.getElementById("details-form").addEventListener("submit", saveDetails);
+document.getElementById("icon").addEventListener("change", previewIcon);
+document.getElementById("category").addEventListener("input", previewIcon);
 document.getElementById("delete-item").addEventListener("click", deleteItem);
 recipeForm.addEventListener("submit", saveRecipe);
-document.getElementById("add-ingredient").addEventListener("click", () => addIngredientRow());
 document.getElementById("cancel-recipe").addEventListener("click", () => drawRecipe());
 
 if (Number.isInteger(itemId) && itemId > 0) {

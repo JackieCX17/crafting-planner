@@ -21,6 +21,10 @@ public class ItemSummary
     /// <example>Weapon</example>
     public string? Category { get; init; }
 
+    /// <summary>Name of the item's picture, when one was given. The file is at <c>/icons/{icon}.svg</c>.</summary>
+    /// <example>broadsword</example>
+    public string? Icon { get; init; }
+
     /// <summary>Raw when the item has no recipe, crafted when it has one.</summary>
     public required ItemKind Kind { get; init; }
 }
@@ -41,6 +45,10 @@ public class ItemDetail : ItemSummary
     /// <summary>The items whose recipes use this item as an ingredient.</summary>
     [JsonPropertyOrder(2)]
     public required IReadOnlyList<ItemUse> UsedIn { get; init; }
+
+    /// <summary>The shopping lists this item is on. Deleting the item removes it from them.</summary>
+    [JsonPropertyOrder(3)]
+    public required IReadOnlyList<ListUse> OnLists { get; init; }
 }
 
 /// <summary>A recipe as shown inside the item it makes.</summary>

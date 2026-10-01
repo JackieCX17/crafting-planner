@@ -21,7 +21,7 @@ namespace CraftingPlanner.Api.Services;
 /// </remarks>
 public static class PlanCalculator
 {
-    /// <summary>Works out the plan for a quantity of an item.</summary>
+    /// <summary>Works out the plan for a quantity of one item.</summary>
     /// <param name="targetItemId">Id of the item to make.</param>
     /// <param name="quantity">How many units of it to make. 1 or more.</param>
     /// <param name="recipes">
@@ -34,13 +34,43 @@ public static class PlanCalculator
     public static PlanResult Calculate(
         int targetItemId,
         long quantity,
+        IReadOnlyDictionary<int, PlanRecipe> recipes) =>
+        Calculate([new PlanTarget(targetItemId, quantity)], recipes);
+
+    /// <summary>Works out one plan for several items at once, such as everything on a shopping list.</summary>
+    /// <remarks>
+    /// The targets' quantities become the starting demand, and the rest is the same as for one
+    /// item. A target that is also an ingredient of another target, such as a Sword on a list
+    /// with a Tool Kit, is processed only after the kit has added its share, so its demand is
+    /// its own quantity plus what the kit needs, rounded once. An item listed twice has its
+    /// quantities added together.
+    /// </remarks>
+    /// <param name="targets">The items to make, each with a quantity. May be empty.</param>
+    /// <param name="recipes">Every recipe, by the id of the item it makes. See the single-item version.</param>
+    /// <returns>The plan.</returns>
+    /// <exception cref="PlanTooLargeException">A total would not fit in a 64-bit whole number.</exception>
+    /// <exception cref="InvalidOperationException">The recipes contain a loop.</exception>
+    public static PlanResult Calculate(
+        IReadOnlyList<PlanTarget> targets,
         IReadOnlyDictionary<int, PlanRecipe> recipes)
     {
-        var order = OrderTargetFirst(targetItemId, recipes);
-
         // A running total of the units needed of each item. By the time an item's turn
         // comes, every item that uses it has already added its share.
-        var demand = new Dictionary<int, long> { [targetItemId] = quantity };
+        var demand = new Dictionary<int, long>();
+        foreach (var target in targets)
+        {
+            try
+            {
+                demand[target.ItemId] = checked(demand.GetValueOrDefault(target.ItemId) + target.Quantity);
+            }
+            catch (OverflowException)
+            {
+                throw new PlanTooLargeException(target.ItemId);
+            }
+        }
+
+        var order = OrderTargetsFirst(demand.Keys, recipes);
+
         var steps = new List<PlanStep>();
         var rawMaterials = new List<RawMaterial>();
         long totalSeconds = 0;
@@ -90,26 +120,25 @@ public static class PlanCalculator
     }
 
     /// <summary>
-    /// Every item the target depends on, in an order where each item comes before its own
-    /// ingredients. The target is first.
+    /// Every item the targets depend on, in an order where each item comes before its own
+    /// ingredients. The targets that nothing else needs come first.
     /// </summary>
     /// <remarks>
-    /// First the items are collected by walking from the target through the recipes.
+    /// First the items are collected by walking from the targets through the recipes.
     /// Then each item is given a count of how many of the collected items use it. An item
     /// whose count is zero is ready: nothing left unprocessed needs it. Processing an item
     /// lowers the count of each of its ingredients, and any that reach zero become ready.
     /// This is a standard method called a topological sort.
     /// </remarks>
-    /// <param name="targetItemId">Id of the item to make.</param>
+    /// <param name="targetItemIds">Ids of the items to make.</param>
     /// <param name="recipes">Every recipe, by the id of the item it makes.</param>
     /// <returns>The item ids in processing order.</returns>
     /// <exception cref="InvalidOperationException">The recipes contain a loop.</exception>
-    private static List<int> OrderTargetFirst(int targetItemId, IReadOnlyDictionary<int, PlanRecipe> recipes)
+    private static List<int> OrderTargetsFirst(IEnumerable<int> targetItemIds, IReadOnlyDictionary<int, PlanRecipe> recipes)
     {
-        // Step 1: collect every item the target depends on, at any depth.
+        // Step 1: collect every item the targets depend on, at any depth.
         var involved = new HashSet<int>();
-        var toExplore = new Stack<int>();
-        toExplore.Push(targetItemId);
+        var toExplore = new Stack<int>(targetItemIds);
 
         while (toExplore.Count > 0)
         {
@@ -138,7 +167,8 @@ public static class PlanCalculator
             }
         }
 
-        // Items nothing needs are ready. Without loops, that is only the target.
+        // Items nothing needs are ready. Without loops, those are targets that no other
+        // target depends on.
         var ready = new Queue<int>(involved.Where(itemId => usersLeft[itemId] == 0));
         var order = new List<int>(involved.Count);
 

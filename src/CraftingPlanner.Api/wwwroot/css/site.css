@@ -295,6 +295,38 @@ tr.total td {
   overflow-x: auto;
 }
 
+/* Item icons. The SVG is used as a mask over the current text colour, so the same
+   file works in light and dark mode and inside coloured text such as links.
+   The image itself is set per element by ui.js (mask-image with a root-absolute
+   address), because a relative url() inside a CSS variable can be resolved against
+   this stylesheet's folder rather than the page, and then nothing is drawn. */
+
+.icon {
+  display: inline-block;
+  width: 1.3em;
+  height: 1.3em;
+  vertical-align: -0.3em;
+  margin-right: 0.35em;
+  background-color: currentColor;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.icon.large {
+  width: 2.2em;
+  height: 2.2em;
+  vertical-align: -0.6em;
+  margin-right: 0.4em;
+}
+
+.icon.faint {
+  opacity: 0.45;
+}
+
 /* Tags for raw and crafted */
 
 .tag {
@@ -347,6 +379,83 @@ tr.total td {
   font-size: 13px;
 }
 
+/* The item picker: search box, category chips, and a list of matches */
+
+.picker input[type="search"] {
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.chip {
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+
+.chip:hover {
+  color: var(--text);
+}
+
+.chip.on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+
+.picker-results {
+  max-height: 320px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.picker-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.picker-row:last-child {
+  border-bottom: none;
+}
+
+.picker-name {
+  flex: 1 1 auto;
+}
+
+.picker-category {
+  font-size: 13px;
+  flex: 0 0 auto;
+}
+
+.picker-results p {
+  margin: 0;
+  padding: 10px;
+}
+
+.chosen {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
 /* Small helpers */
 
 .muted {
@@ -375,12 +484,12 @@ tr.total td {
 .ingredient-row {
   display: flex;
   gap: 8px;
-  align-items: flex-end;
+  align-items: center;
   margin-bottom: 8px;
   flex-wrap: wrap;
 }
 
-.ingredient-row select {
+.ingredient-row .ingredient-name {
   flex: 1 1 200px;
 }
 

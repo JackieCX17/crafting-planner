@@ -13,6 +13,7 @@
       <nav class="site-nav">
         <a href="index.html">Home</a>
         <a href="items.html">Items</a>
+        <a href="lists.html">Lists</a>
         <a href="plan.html">Plan</a>
         <a href="swagger/index.html">API docs</a>
       </nav>
@@ -46,6 +47,12 @@
             <label>Description
               <textarea id="description" maxlength="500" rows="3"></textarea>
             </label>
+            <label>Picture
+              <span style="display: flex; gap: 8px; align-items: center">
+                <span id="icon-preview"></span>
+                <select id="icon" style="flex: 1"></select>
+              </span>
+            </label>
             <div class="actions" style="margin-top: 12px">
               <button class="btn" type="submit">Save details</button>
               <button id="delete-item" class="btn danger" type="button">Delete item</button>
@@ -57,6 +64,8 @@
         <div class="card">
           <h2>Used in</h2>
           <div id="used-in"></div>
+          <h2 style="margin-top: 20px">On lists</h2>
+          <div id="on-lists"></div>
         </div>
       </div>
 
@@ -77,9 +86,9 @@
           </div>
           <div class="muted" style="font-size: 14px; margin-bottom: 6px">Ingredients, per craft</div>
           <div id="ingredients"></div>
-          <div class="actions">
-            <button id="add-ingredient" class="btn secondary small" type="button">Add ingredient</button>
-          </div>
+          <p id="no-ingredients" class="muted hidden">No ingredients yet. Pick some below.</p>
+          <div class="muted" style="font-size: 14px; margin: 12px 0 6px">Add an ingredient</div>
+          <div id="ingredient-picker"></div>
           <div class="actions" style="margin-top: 12px">
             <button class="btn" type="submit">Save recipe</button>
             <button id="cancel-recipe" class="btn secondary" type="button">Cancel</button>
@@ -98,6 +107,7 @@
 
   <script src="js/ui.js"></script>
   <script src="js/api.js"></script>
+  <script src="js/picker.js"></script>
   <script src="js/item.js"></script>
 </body>
 </html>

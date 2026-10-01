@@ -56,14 +56,47 @@ function queryParam(name) {
   return new URLSearchParams(window.location.search).get(name);
 }
 
+/** The icon used for an item that has none of its own, by category. */
+const categoryIcons = {
+  "raw material": "rock",
+  component: "cardboard-box",
+  tool: "hammer-nails",
+  weapon: "two-handed-sword",
+  utility: "anvil",
+  kit: "backpack",
+};
+
 /**
- * Builds a link to an item's own page.
+ * Builds an item's icon: its own picture, or a faint one for its category when it has none.
+ * @param {object} item Anything with "icon" and "category" fields, such as an item or a tree node.
+ * @param {boolean} [large] Whether to draw it at heading size.
+ * @returns {HTMLElement} The icon element.
+ */
+function itemIcon(item, large = false) {
+  const own = item.icon;
+  const fallback = categoryIcons[(item.category || "").toLowerCase()] || "cardboard-box";
+  const file = `url(/icons/${own || fallback}.svg)`;
+  return el("span", {
+    class: `icon${large ? " large" : ""}${own ? "" : " faint"}`,
+    style: `-webkit-mask-image: ${file}; mask-image: ${file}`,
+    "aria-hidden": "true",
+  });
+}
+
+/**
+ * Builds a link to an item's own page, with its icon in front when the item is known.
  * @param {number} id The item's id.
  * @param {string} name The item's name, used as the link text.
+ * @param {object} [item] The item, when its icon should be shown.
  * @returns {HTMLElement} The link.
  */
-function itemLink(id, name) {
-  return el("a", { href: `item.html?id=${id}` }, name);
+function itemLink(id, name, item = null) {
+  const link = el("a", { href: `item.html?id=${id}` });
+  if (item) {
+    link.appendChild(itemIcon(item));
+  }
+  link.appendChild(document.createTextNode(name));
+  return link;
 }
 
 /**
@@ -111,19 +144,6 @@ async function loadAllItems() {
     page += 1;
   } while (page <= totalPages);
   return items;
-}
-
-/**
- * Fills a select box with items.
- * @param {HTMLSelectElement} select The select box.
- * @param {Array<object>} items The items to list.
- * @param {number|string|null} [selectedId] The id to select, if any.
- */
-function fillItemSelect(select, items, selectedId = null) {
-  select.replaceChildren(...items.map((item) => el("option", { value: item.id }, item.name)));
-  if (selectedId !== null) {
-    select.value = String(selectedId);
-  }
 }
 
 /**

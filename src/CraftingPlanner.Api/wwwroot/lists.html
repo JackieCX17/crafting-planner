@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lists | Crafting Planner</title>
+  <link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="inner">
+      <a class="brand" href="index.html">Crafting Planner</a>
+      <nav class="site-nav">
+        <a href="index.html">Home</a>
+        <a href="items.html">Items</a>
+        <a href="lists.html">Lists</a>
+        <a href="plan.html">Plan</a>
+        <a href="swagger/index.html">API docs</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <h1>Lists</h1>
+    <p class="lead">A list is a set of items to make, each with a quantity, that you keep and plan together. Make as many as you like.</p>
+
+    <div class="card">
+      <h2>New list</h2>
+      <form id="add-form" class="row">
+        <label>Name
+          <input id="add-name" required maxlength="80" placeholder="Starter gear">
+        </label>
+        <label>Note
+          <input id="add-description" maxlength="500" placeholder="What a new player needs on day one." size="40">
+        </label>
+        <button class="btn" type="submit">Create</button>
+      </form>
+      <div id="add-notice" class="notice"></div>
+    </div>
+
+    <div class="card">
+      <div id="list-notice" class="notice"></div>
+      <div id="lists"></div>
+    </div>
+  </main>
+
+  <script src="js/ui.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/lists.js"></script>
+</body>
+</html>

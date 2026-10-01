@@ -63,6 +63,13 @@ public abstract class PlannerControllerBase : ControllerBase
             $"The {what} was not found",
             $"There is no {what} with id {id}.");
 
+    /// <summary>Builds the 400 rejection for a plan whose totals do not fit in 64 bits.</summary>
+    /// <param name="detail">A plain explanation naming what was asked for and the item that overflowed.</param>
+    /// <param name="itemId">Id of the item whose total was too large.</param>
+    /// <returns>The response to send back.</returns>
+    public ObjectResult TooLarge(string detail, int itemId) =>
+        Rejection(StatusCodes.Status400BadRequest, "The plan is too large", detail, extraName: "itemId", extraValue: itemId);
+
     /// <summary>
     /// Tidies optional text: removes spaces at both ends, and treats text that is
     /// empty or only spaces as "no value".

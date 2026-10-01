@@ -152,6 +152,56 @@ public class PlanCalculatorTests
     }
 
     /// <summary>
+    /// Several targets at once: 2 Swords and 1 Pickaxe share Iron Ingots and Sticks, which are
+    /// totalled across both before rounding.
+    /// </summary>
+    [Fact]
+    public void SeveralTargets_AreTotalledTogether()
+    {
+        var plan = PlanCalculator.Calculate([new PlanTarget(Id("Sword"), 2), new PlanTarget(Id("Pickaxe"), 1)], Recipes);
+
+        Assert.Equal((7L, 7L, 7L, 0L), StepOf(plan, "Iron Ingot"));
+        Assert.Equal((4L, 1L, 4L, 0L), StepOf(plan, "Stick"));
+        Assert.Equal([("Coal", 7L), ("Iron Ore", 14L), ("Log", 1L)], RawByName(plan));
+        Assert.Equal(98, plan.TotalSeconds);
+    }
+
+    /// <summary>
+    /// A target that another target needs: a Sword on a list with a Tool Kit is counted once,
+    /// with its own quantity and the kit's share added, and crafted before the kit.
+    /// </summary>
+    [Fact]
+    public void ATargetAnotherTargetNeeds_IsCountedOnce()
+    {
+        var plan = PlanCalculator.Calculate([new PlanTarget(Id("Sword"), 2), new PlanTarget(Id("Tool Kit"), 1)], Recipes);
+
+        Assert.Equal((3L, 3L, 3L, 0L), StepOf(plan, "Sword"));
+        Assert.Single(plan.Steps, step => step.ItemId == Id("Sword"));
+        var position = plan.Steps.Select((step, index) => (step.ItemId, index)).ToDictionary(pair => pair.ItemId, pair => pair.index);
+        Assert.True(position[Id("Sword")] < position[Id("Tool Kit")]);
+    }
+
+    /// <summary>An item listed twice has its quantities added together.</summary>
+    [Fact]
+    public void ARepeatedTarget_HasItsQuantitiesAdded()
+    {
+        var plan = PlanCalculator.Calculate([new PlanTarget(Id("Stick"), 3), new PlanTarget(Id("Stick"), 2)], Recipes);
+
+        Assert.Equal((5L, 2L, 8L, 3L), StepOf(plan, "Stick"));
+    }
+
+    /// <summary>No targets means nothing to gather and nothing to craft.</summary>
+    [Fact]
+    public void NoTargets_GiveAnEmptyPlan()
+    {
+        var plan = PlanCalculator.Calculate([], Recipes);
+
+        Assert.Empty(plan.RawMaterials);
+        Assert.Empty(plan.Steps);
+        Assert.Equal(0, plan.TotalSeconds);
+    }
+
+    /// <summary>
     /// A chain of recipes that each need 1,000 of the next, asked for a million times,
     /// exceeds what a 64-bit number can hold within a few levels. That is refused rather
     /// than silently wrapping around to a wrong number.
