@@ -295,6 +295,38 @@ tr.total td {
   overflow-x: auto;
 }
 
+/* Item icons. The SVG is used as a mask over the current text colour, so the same
+   file works in light and dark mode and inside coloured text such as links.
+   The image itself is set per element by ui.js (mask-image with a root-absolute
+   address), because a relative url() inside a CSS variable can be resolved against
+   this stylesheet's folder rather than the page, and then nothing is drawn. */
+
+.icon {
+  display: inline-block;
+  width: 1.3em;
+  height: 1.3em;
+  vertical-align: -0.3em;
+  margin-right: 0.35em;
+  background-color: currentColor;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.icon.large {
+  width: 2.2em;
+  height: 2.2em;
+  vertical-align: -0.6em;
+  margin-right: 0.4em;
+}
+
+.icon.faint {
+  opacity: 0.45;
+}
+
 /* Tags for raw and crafted */
 
 .tag {

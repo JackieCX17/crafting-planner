@@ -51,7 +51,7 @@ async function loadItems() {
       table(
         [{ text: "Name" }, { text: "Category" }, { text: "Kind" }, { text: "Description" }, { text: "" }],
         result.items.map((item) => [
-          itemLink(item.id, item.name),
+          itemLink(item.id, item.name, item),
           item.category || "",
           kindTag(item.kind),
           item.description || "",
