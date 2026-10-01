@@ -17,6 +17,11 @@ public sealed record PlanRecipe(int OutputQuantity, int CraftSeconds, IReadOnlyL
 /// <param name="Quantity">Units one craft uses up.</param>
 public sealed record PlanIngredient(int ItemId, int Quantity);
 
+/// <summary>Something a plan is asked to make: an item and how many of it.</summary>
+/// <param name="ItemId">Id of the item to make.</param>
+/// <param name="Quantity">How many units of it. 1 or more.</param>
+public sealed record PlanTarget(int ItemId, long Quantity);
+
 /// <summary>One crafted item in a plan.</summary>
 /// <param name="ItemId">Id of the crafted item.</param>
 /// <param name="Needed">Units required in total, by the target and by other steps.</param>
@@ -39,6 +44,15 @@ public sealed record RawMaterial(int ItemId, long Quantity);
 /// </param>
 /// <param name="TotalSeconds">The time for every craft in every step.</param>
 public sealed record PlanResult(IReadOnlyList<RawMaterial> RawMaterials, IReadOnlyList<PlanStep> Steps, long TotalSeconds);
+
+/// <summary>A plan with the item names attached, ready to be sent or written to a file.</summary>
+/// <param name="RawMaterials">The raw items to gather, in name order.</param>
+/// <param name="Steps">The crafted items in the order to craft them.</param>
+/// <param name="TotalSeconds">The time for every craft in every step.</param>
+public sealed record NamedPlan(
+    IReadOnlyList<Contracts.RawMaterialLine> RawMaterials,
+    IReadOnlyList<Contracts.PlanStepLine> Steps,
+    long TotalSeconds);
 
 /// <summary>
 /// Thrown when a total in the plan would not fit in a 64-bit whole number. This takes a

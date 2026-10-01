@@ -33,4 +33,7 @@ public class Item
 
     /// <summary>Every recipe line that uses this item as an ingredient.</summary>
     public List<RecipeIngredient> UsedIn { get; set; } = [];
+
+    /// <summary>Every shopping list line that names this item.</summary>
+    public List<ShoppingListEntry> OnLists { get; set; } = [];
 }

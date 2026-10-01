@@ -19,6 +19,12 @@ public class PlannerDbContext(DbContextOptions<PlannerDbContext> options) : DbCo
     /// <summary>The RecipeIngredients table.</summary>
     public DbSet<RecipeIngredient> RecipeIngredients => Set<RecipeIngredient>();
 
+    /// <summary>The ShoppingLists table.</summary>
+    public DbSet<ShoppingList> ShoppingLists => Set<ShoppingList>();
+
+    /// <summary>The ShoppingListEntries table.</summary>
+    public DbSet<ShoppingListEntry> ShoppingListEntries => Set<ShoppingListEntry>();
+
     /// <summary>
     /// Describes the tables: field lengths, uniqueness, how tables link together,
     /// and what happens to linked rows when a row is deleted.
@@ -73,6 +79,34 @@ public class PlannerDbContext(DbContextOptions<PlannerDbContext> options) : DbCo
 
             line.ToTable(table =>
                 table.HasCheckConstraint("CK_RecipeIngredients_Quantity", "\"Quantity\" BETWEEN 1 AND 1000"));
+        });
+
+        modelBuilder.Entity<ShoppingList>(list =>
+        {
+            list.Property(l => l.Name).HasMaxLength(80).UseCollation("NOCASE");
+            list.HasIndex(l => l.Name).IsUnique();
+            list.Property(l => l.Description).HasMaxLength(500);
+        });
+
+        modelBuilder.Entity<ShoppingListEntry>(entry =>
+        {
+            entry.HasKey(e => new { e.ListId, e.ItemId });
+
+            // Deleting a list deletes its lines.
+            entry.HasOne(e => e.List)
+                .WithMany(l => l.Entries)
+                .HasForeignKey(e => e.ListId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Deleting an item removes it from every list. Unlike a recipe, a list
+            // missing one of its lines is still a valid list.
+            entry.HasOne(e => e.Item)
+                .WithMany(i => i.OnLists)
+                .HasForeignKey(e => e.ItemId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entry.ToTable(table =>
+                table.HasCheckConstraint("CK_ShoppingListEntries_Quantity", "\"Quantity\" BETWEEN 1 AND 1000000"));
         });
     }
 }

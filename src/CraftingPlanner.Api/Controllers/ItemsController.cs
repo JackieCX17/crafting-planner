@@ -294,9 +294,9 @@ public class ItemsController(PlannerDbContext db, IconCatalog icons) : PlannerCo
 
     /// <summary>Deletes an item.</summary>
     /// <remarks>
-    /// The item's own recipe is deleted with it. An item that other recipes use as an
-    /// ingredient cannot be deleted: remove it from those recipes first. The rejection
-    /// lists them in its <c>usedIn</c> field.
+    /// The item's own recipe is deleted with it, and it is removed from any shopping lists
+    /// it is on. An item that other recipes use as an ingredient cannot be deleted: remove it
+    /// from those recipes first. The rejection lists them in its <c>usedIn</c> field.
     /// </remarks>
     /// <param name="id">Id of the item.</param>
     /// <param name="cancellationToken">Signals that the caller has stopped waiting.</param>
@@ -409,6 +409,8 @@ public class ItemsController(PlannerDbContext db, IconCatalog icons) : PlannerCo
             .Include(i => i.UsedIn)
                 .ThenInclude(line => line.Recipe)
                 .ThenInclude(r => r.OutputItem)
+            .Include(i => i.OnLists)
+                .ThenInclude(entry => entry.List)
             .FirstOrDefaultAsync(i => i.Id == id, cancellationToken);
 
     /// <summary>Reloads an item that was just saved and returns it to the caller.</summary>
@@ -461,6 +463,15 @@ public class ItemsController(PlannerDbContext db, IconCatalog icons) : PlannerCo
                     ItemId = line.Recipe.OutputItemId,
                     ItemName = line.Recipe.OutputItem.Name,
                     Quantity = line.Quantity,
+                })
+                .ToList(),
+            OnLists = item.OnLists
+                .OrderBy(entry => entry.List.Name)
+                .Select(entry => new ListUse
+                {
+                    ListId = entry.ListId,
+                    ListName = entry.List.Name,
+                    Quantity = entry.Quantity,
                 })
                 .ToList(),
         };
