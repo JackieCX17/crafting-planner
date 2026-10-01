@@ -37,6 +37,16 @@ The crafting theme is inspired by games such as Minecraft, where tools are built
 | N2 | A craft action that uses up stock and adds the finished item |
 | N3 | A hosted live demo |
 
+### Added after the planned stages
+
+Three additions were made after stage 6, each as its own pull request, to make the website feel like a finished product rather than a demonstration. Each is described where it belongs below and marked "added after stage 6".
+
+| Addition | Why |
+|---|---|
+| Item pictures | A list of names reads as a database; a list of pictures reads as a product |
+| An item picker with search and category chips | Dropdowns give no way to narrow by category and do not scale |
+| Saved lists of items to make, planned together | The question "what do I need for all of this?" is the real one; a one-item plan only answers part of it |
+
 ### Deliberately left out
 
 | Left out | Reason |
@@ -71,7 +81,21 @@ erDiagram
         int ItemId PK, FK
         int Quantity
     }
+    SHOPPING_LIST ||--o{ SHOPPING_LIST_ENTRY : "holds"
+    ITEM ||--o{ SHOPPING_LIST_ENTRY : "is on"
+    SHOPPING_LIST {
+        int Id PK
+        string Name "unique"
+        string Description
+    }
+    SHOPPING_LIST_ENTRY {
+        int ListId PK, FK
+        int ItemId PK, FK
+        long Quantity
+    }
 ```
+
+The two shopping list tables were added after stage 6.
 
 | Table | Field | Type | Rules |
 |---|---|---|---|
@@ -86,6 +110,11 @@ erDiagram
 | Recipe | CraftSeconds | whole number | 0 to 86,400, which is one day. Time for one craft |
 | RecipeIngredient | RecipeId, ItemId | whole numbers | Together they identify the row, so an item appears once per recipe |
 | RecipeIngredient | Quantity | whole number | 1 to 1,000. Units used by one craft |
+| ShoppingList | Id | whole number | Set by the database |
+| ShoppingList | Name | text | Required, unique, 1 to 80 characters |
+| ShoppingList | Description | text | Optional, up to 500 characters |
+| ShoppingListEntry | ListId, ItemId | whole numbers | Together they identify the row, so an item appears once per list |
+| ShoppingListEntry | Quantity | whole number | 1 to 1,000,000. Units to make |
 
 **Raw or crafted is never stored.** An item is raw when it has no recipe. Working this out on request means the label can never disagree with the data.
 
@@ -105,6 +134,9 @@ erDiagram
 | The item or recipe in the address exists | 404 Not Found |
 | Plan quantity is between 1 and 1,000,000 | 400 Bad Request |
 | Every total in a plan fits in a 64-bit whole number | 400 Bad Request, naming the item |
+| List names are unique | 409 Conflict |
+| A list holds at most 50 items | 409 Conflict |
+| An item on a list exists; a list in the address exists | 404 Not Found |
 
 Every rejection uses the same standard error format (Problem Details), with a short title, a plain explanation, and the field at fault where one applies.
 
@@ -123,6 +155,8 @@ Every rejection uses the same standard error format (Problem Details), with a sh
 | A recipe has at most 20 ingredients | Keeps one request from creating an unreasonable amount of work |
 | A recipe tree stops at 2,000 nodes and marks what it left out | A tree repeats shared items, so a wide, deep set of recipes could make one that is far too large to send or draw. Growing it level by level puts the cut at the deepest levels, where it matters least |
 | An item's icon must be one of the pictures the website ships with, listed by `GET /api/icons` | The API refuses a name with no file behind it, so the website never shows a broken picture. The list comes from the files on disk, so adding an icon file is all it takes to offer a new one |
+| Deleting an item removes it from every list, rather than being blocked as it is for recipes | A recipe missing an ingredient is wrong data; a list missing an entry is still a valid list. The item page says how many lists an item is on before it is deleted |
+| Planning a list and planning one item share one calculation and one assembly function | Two paths to the same numbers cannot disagree. A list's entries become the calculation's targets; a single item is a list of one |
 | At startup, the app compares the database file with the code and stops with a plain message if a column is missing | Tables are created on first run but never altered. When the Icon column was added, an older file would otherwise fail on the first request with a database error. A deployed app would use migrations instead; this check is the honest stand-in for a project with no deployed database |
 | The plan export is one table with a Type column | A single table opens cleanly in any spreadsheet program. Two tables in one file do not |
 
@@ -224,6 +258,20 @@ All addresses start with `/api`. Requests and responses use JSON.
 |---|---|---|
 | GET | `/icons` | The pictures an item can be given, with their authors |
 
+### Lists (added after stage 6)
+
+| Method | Address | Purpose |
+|---|---|---|
+| GET | `/lists` | List the shopping lists, with how many items each holds |
+| GET | `/lists/{id}` | One list with everything on it |
+| POST | `/lists` | Create an empty list |
+| PUT | `/lists/{id}` | Rename a list or change its note |
+| DELETE | `/lists/{id}` | Delete a list. The items on it are not affected |
+| PUT | `/lists/{id}/items/{itemId}` | Put an item on the list, or change its quantity |
+| DELETE | `/lists/{id}/items/{itemId}` | Take an item off the list |
+| GET | `/lists/{id}/plan` | What it takes to make everything on the list |
+| GET | `/lists/{id}/plan/export` | The same as a CSV file |
+
 ### Planning and summaries
 
 | Method | Address | Purpose |
@@ -256,7 +304,9 @@ Four pages of plain HTML, CSS, and JavaScript, served by the same app from its `
 | Home | Totals and highlights, and the way in to each page | Stats |
 | Plan | Pick an item with the picker and a quantity; show the raw materials, the steps in order, the total time; download as CSV | Items list, plan, export |
 | Items | Search, filter, sort, and page through items; add and delete | Items |
-| Item | Edit details and picture; create, edit, or delete the recipe, adding ingredients with the picker; see what the item is used in; view the recipe tree | Items, recipes, tree, icons |
+| Item | Edit details and picture; create, edit, or delete the recipe, adding ingredients with the picker; see what the item is used in and which lists it is on; view the recipe tree | Items, recipes, tree, icons |
+| Lists (added after stage 6) | Every saved list with its item count; create and delete | Lists |
+| List (added after stage 6) | The items on one list with editable quantities, the picker to add more, and the plan for everything on it, redrawn after every change; rename, delete, download | Lists, list entries, list plan, export |
 
 ### The item picker (added after stage 6)
 

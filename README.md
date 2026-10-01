@@ -58,9 +58,11 @@ Plain HTML, CSS, and JavaScript, served by the same app. Every page reaches the 
 | Page | What it does |
 |---|---|
 | Home | Totals, the most used ingredient, the longest recipe chain, and the way in to each page |
-| Plan | Pick an item by search or category, and a quantity. Get the raw materials, the crafting steps in order, the total time, and a CSV download |
+| Lists | Saved sets of items to make, each with a quantity. Create as many as you like |
+| List | Add items with the picker, set quantities, and see what it takes to make everything on the list, redrawn after every change. Download as CSV |
+| Plan | Pick one item by search or category, and a quantity. Get the raw materials, the crafting steps in order, the total time, and a CSV download |
 | Items | Search, filter, sort, and page through items. Add and delete items |
-| Item | Edit an item's details and picture, create or edit its recipe with a picker for ingredients, see what it is used in, and view its recipe tree |
+| Item | Edit an item's details and picture, create or edit its recipe with a picker for ingredients, see what it is used in and which lists it is on, and view its recipe tree |
 
 Rejections from the API appear on the page in plain words. Try giving Planks a recipe that uses Sticks, and the page explains the loop.
 
@@ -87,6 +89,7 @@ On the interactive API page, open an endpoint, choose **Try it out**, then **Exe
 | `GET /api/items/18/plan/export` with `quantity` set to `3` | The same plan as a file that opens in a spreadsheet |
 | `GET /api/items/11/tree` | The Sword's recipe drawn as a tree, down to the raw materials |
 | `GET /api/stats` | Totals, the most used ingredient, and the longest recipe chain |
+| `POST /api/lists`, then `PUT /api/lists/1/items/11` and `/12` with quantities, then `GET /api/lists/1/plan` | A saved list of a Sword and a Pickaxe, planned together: their shared ingredients are totalled once |
 
 ## Documentation
 
