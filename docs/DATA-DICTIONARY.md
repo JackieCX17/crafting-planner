@@ -22,6 +22,7 @@ One row per item: anything that can be crafted or used as an ingredient.
 | `Name` | TEXT | no | Unique, ignoring letter case. 1 to 80 characters. Spaces at the ends are removed before saving | Display name |
 | `Description` | TEXT | yes | Up to 500 characters | What the item is |
 | `Category` | TEXT | yes | Up to 40 characters, compared ignoring letter case | Group used for filtering, such as "Tool" |
+| `Icon` | TEXT | yes | Up to 40 characters; lower-case letters, digits, and hyphens. The API only accepts names of pictures the website ships with | Name of the item's picture, served at `/icons/{Icon}.svg` |
 
 Indexes: `IX_Items_Name`, unique.
 
@@ -79,7 +80,8 @@ CREATE TABLE "Items" (
     "Id" INTEGER NOT NULL CONSTRAINT "PK_Items" PRIMARY KEY AUTOINCREMENT,
     "Name" TEXT COLLATE NOCASE NOT NULL,
     "Description" TEXT NULL,
-    "Category" TEXT COLLATE NOCASE NULL
+    "Category" TEXT COLLATE NOCASE NULL,
+    "Icon" TEXT NULL
 );
 
 CREATE TABLE "Recipes" (
@@ -109,4 +111,8 @@ CREATE UNIQUE INDEX "IX_Recipes_OutputItemId" ON "Recipes" ("OutputItemId");
 
 ## Sample data
 
-On first run the app adds 19 items and 12 recipes: raw materials (Log, Iron Ore, Coal, Cobblestone, String, Flint, Feather), components (Plank, Stick, Iron Ingot), finished items (Sword, Pickaxe, Bow, Arrow, Torch, Furnace, Chest), and two kits (Tool Kit, Hunter Kit). The sample data is only added when the Items table is empty, so changes are never overwritten. To start over, stop the app and delete the database file.
+On first run the app adds 19 items and 12 recipes: raw materials (Log, Iron Ore, Coal, Cobblestone, String, Flint, Feather), components (Plank, Stick, Iron Ingot), finished items (Sword, Pickaxe, Bow, Arrow, Torch, Furnace, Chest), and two kits (Tool Kit, Hunter Kit). Each has an icon. The sample data is only added when the Items table is empty, so changes are never overwritten. To start over, stop the app and delete the database file.
+
+## When the tables change
+
+The app creates the tables on first run but never alters an existing file. At startup it compares the file with the code, and if a column is missing (for example, a file made before the `Icon` column existed) it stops with a message naming the column and asking for the file to be deleted. A deployed app would use migrations to upgrade the file in place; the design document explains why this project does not.

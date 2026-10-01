@@ -1,39 +1,69 @@
-/* The Plan page: choose an item and a quantity, show what it takes to make it. */
+/* The Plan page: pick an item and a quantity, show what it takes to make it. */
 
 const planForm = document.getElementById("plan-form");
-const itemSelect = document.getElementById("item");
 const quantityInput = document.getElementById("quantity");
 const planNotice = document.getElementById("notice");
 const resultPanel = document.getElementById("result");
+const makePlanButton = document.getElementById("make-plan");
+
+/** Every item by id, for icons in the plan tables. */
+const knownItems = new Map();
+
+/** The item picked to be planned, or null before one is picked. */
+let chosenItem = null;
 
 /**
- * Fills the item list, then makes a plan straight away if the address names an item,
- * as links from the item page do.
+ * Loads the items into the picker, then makes a plan straight away if the address names
+ * an item, as links from the item page do.
  */
 async function setUpPlanPage() {
+  let items;
   try {
-    fillItemSelect(itemSelect, await loadAllItems(), queryParam("id"));
+    items = await loadAllItems();
   } catch (error) {
     showProblem(planNotice, error);
     return;
   }
+
+  for (const item of items) {
+    knownItems.set(item.id, item);
+  }
+
+  const picker = createPicker({ items, buttonText: "Pick", onPick: choose });
+  document.getElementById("picker").replaceChildren(picker.element);
 
   const quantity = queryParam("quantity");
   if (quantity) {
     quantityInput.value = quantity;
   }
 
-  if (queryParam("id")) {
-    await makePlan();
+  const wanted = knownItems.get(Number(queryParam("id")));
+  if (wanted) {
+    choose(wanted);
   }
+}
+
+/**
+ * Sets the item to plan, shows it next to the quantity, and makes the plan.
+ * @param {object} item The picked item.
+ */
+function choose(item) {
+  chosenItem = item;
+  document.getElementById("chosen").replaceChildren(itemIcon(item), item.name, " ", kindTag(item.kind));
+  document.getElementById("chosen").classList.remove("muted");
+  makePlanButton.disabled = false;
+  makePlan();
 }
 
 /**
  * Asks the API for the plan and draws it.
  */
 async function makePlan() {
+  if (chosenItem === null) {
+    return;
+  }
   clearNotice(planNotice);
-  const id = itemSelect.value;
+  const id = chosenItem.id;
   const quantity = quantityInput.value;
 
   let plan;
@@ -48,7 +78,10 @@ async function makePlan() {
   // Keep the address in step with the plan, so it can be bookmarked or shared.
   history.replaceState(null, "", `plan.html?id=${id}&quantity=${encodeURIComponent(quantity)}`);
 
-  document.getElementById("result-title").textContent = `${formatNumber(plan.quantity)} × ${plan.itemName}`;
+  document.getElementById("result-title").replaceChildren(
+    itemIcon(chosenItem, true),
+    `${formatNumber(plan.quantity)} × ${plan.itemName}`,
+  );
   document.getElementById("download").href = `/api/items/${id}/plan/export?quantity=${encodeURIComponent(quantity)}`;
   document.getElementById("item-page").href = `item.html?id=${id}`;
   document.getElementById("total-time").textContent = formatSeconds(plan.totalSeconds);
@@ -60,7 +93,7 @@ async function makePlan() {
   document.getElementById("raw").replaceChildren(
     table(
       [{ text: "Item" }, { text: "Quantity", num: true }],
-      plan.rawMaterials.map((raw) => [itemLink(raw.itemId, raw.itemName), raw.quantity]),
+      plan.rawMaterials.map((raw) => [itemLink(raw.itemId, raw.itemName, knownItems.get(raw.itemId)), raw.quantity]),
     ),
   );
 
@@ -79,7 +112,7 @@ async function makePlan() {
           ],
           plan.steps.map((step, index) => [
             String(index + 1),
-            itemLink(step.itemId, step.itemName),
+            itemLink(step.itemId, step.itemName, knownItems.get(step.itemId)),
             step.needed,
             step.crafts,
             step.made,

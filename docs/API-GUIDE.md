@@ -11,6 +11,7 @@ This guide shows every operation with an example request and the response it ret
 | [Ingredients](#ingredients) | Changing one line of a recipe |
 | [Planning](#planning) | What it takes to make a quantity of an item, as JSON or as a file, and the recipe tree |
 | [Summary](#summary) | Totals and highlights across all the data |
+| [Icons](#icons) | The pictures an item can be given |
 | [Rejections](#rejections) | The error format, with an example of each kind |
 
 ## Basics
@@ -41,6 +42,7 @@ An item is anything that can be crafted or used as an ingredient.
 | `name` | text | Required, unique, 1 to 80 characters. Upper and lower case are treated the same |
 | `description` | text or null | Optional, up to 500 characters |
 | `category` | text or null | Optional, up to 40 characters |
+| `icon` | text or null | Optional. One of the names listed by `GET /api/icons`; any other name is refused with 400. The picture is served at `/icons/{icon}.svg` |
 | `kind` | `raw` or `crafted` | Worked out by the server: crafted when the item has a recipe |
 
 ### List items
@@ -585,6 +587,27 @@ Response `200 OK`:
 ```
 
 `depth` counts recipes: a raw item is 0, an item made only from raw items is 1. Hunter Kit is 4 because its Bow needs Sticks, which need Planks, which need Logs. Tool Kit is also 4; ties are settled by name. Both highlights are null when there are no recipes.
+
+## Icons
+
+### List the pictures an item can be given
+
+```http
+GET /api/icons
+```
+
+Response `200 OK`, in name order:
+
+```json
+[
+  { "name": "anvil", "author": "Lorc", "url": "/icons/anvil.svg" },
+  { "name": "backpack", "author": "Delapouite", "url": "/icons/backpack.svg" },
+  { "name": "broadhead-arrow", "author": "Lorc", "url": "/icons/broadhead-arrow.svg" },
+  { "name": "broadsword", "author": "Lorc", "url": "/icons/broadsword.svg" }
+]
+```
+
+An item's `icon` field takes one of these names. The pictures come from [game-icons.net](https://game-icons.net) under the Creative Commons Attribution 3.0 license, and `author` is who to credit. Each file is a single-colour SVG that takes the colour of the text around it when used as a mask.
 
 ## Rejections
 

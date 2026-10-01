@@ -26,6 +26,12 @@ public class ItemRequest
     /// <example>Component</example>
     [StringLength(40, ErrorMessage = ItemRules.CategoryLength)]
     public string? Category { get; set; }
+
+    /// <summary>Optional name of the item's picture, one of the names listed by <c>GET /api/icons</c>.</summary>
+    /// <example>metal-bar</example>
+    [StringLength(40, ErrorMessage = ItemRules.IconLength)]
+    [RegularExpression(ItemRules.IconPattern, ErrorMessage = ItemRules.IconFormat)]
+    public string? Icon { get; set; }
 }
 
 /// <summary>
@@ -52,6 +58,12 @@ public class ItemPatchRequest
     /// <example>Weapon</example>
     [StringLength(40, ErrorMessage = ItemRules.CategoryLength)]
     public string? Category { get; set; }
+
+    /// <summary>New picture name, or an empty string to clear it. One of the names listed by <c>GET /api/icons</c>.</summary>
+    /// <example>two-handed-sword</example>
+    [StringLength(40, ErrorMessage = ItemRules.IconLength)]
+    [RegularExpression(ItemRules.IconPattern, ErrorMessage = ItemRules.IconFormat)]
+    public string? Icon { get; set; }
 }
 
 /// <summary>
@@ -71,4 +83,16 @@ public static class ItemRules
 
     /// <summary>Sent when the category is too long.</summary>
     public const string CategoryLength = "The category can be up to 40 characters long.";
+
+    /// <summary>Sent when the icon name is too long.</summary>
+    public const string IconLength = "The icon name can be up to 40 characters long.";
+
+    /// <summary>What an icon name may contain: lower-case letters, digits, and hyphens. An empty string clears it.</summary>
+    public const string IconPattern = "^[a-z0-9-]*$";
+
+    /// <summary>Sent when the icon name has other characters in it.</summary>
+    public const string IconFormat = "The icon name can only contain lower-case letters, digits, and hyphens.";
+
+    /// <summary>Sent when the icon name is not one the website ships with. The endpoint adds the name.</summary>
+    public const string IconUnknown = "There is no icon with that name. GET /api/icons lists the icons.";
 }

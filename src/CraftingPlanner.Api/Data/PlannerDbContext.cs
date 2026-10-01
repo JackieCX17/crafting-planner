@@ -35,6 +35,7 @@ public class PlannerDbContext(DbContextOptions<PlannerDbContext> options) : DbCo
 
             item.Property(i => i.Description).HasMaxLength(500);
             item.Property(i => i.Category).HasMaxLength(40).UseCollation("NOCASE");
+            item.Property(i => i.Icon).HasMaxLength(40);
         });
 
         modelBuilder.Entity<Recipe>(recipe =>

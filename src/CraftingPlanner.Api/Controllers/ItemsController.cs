@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using CraftingPlanner.Api.Contracts;
 using CraftingPlanner.Api.Data;
 using CraftingPlanner.Api.Models;
+using CraftingPlanner.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,9 +12,10 @@ namespace CraftingPlanner.Api.Controllers;
 /// Endpoints for items: the things that can be crafted or used as ingredients.
 /// </summary>
 /// <param name="db">The database. Supplied automatically for each request.</param>
+/// <param name="icons">The pictures an item can be given. Supplied automatically.</param>
 [Route("api/items")]
 [Tags("Items")]
-public class ItemsController(PlannerDbContext db) : PlannerControllerBase
+public class ItemsController(PlannerDbContext db, IconCatalog icons) : PlannerControllerBase
 {
     /// <summary>Lists items.</summary>
     /// <remarks>
@@ -90,6 +92,7 @@ public class ItemsController(PlannerDbContext db) : PlannerControllerBase
                 Name = i.Name,
                 Description = i.Description,
                 Category = i.Category,
+                Icon = i.Icon,
                 Kind = i.Recipe == null ? ItemKind.Raw : ItemKind.Crafted,
             })
             .ToListAsync(cancellationToken);
@@ -135,7 +138,7 @@ public class ItemsController(PlannerDbContext db) : PlannerControllerBase
     /// <param name="cancellationToken">Signals that the caller has stopped waiting.</param>
     /// <returns>The item as saved, including its new id.</returns>
     /// <response code="201">The item was created. The Location header holds its address.</response>
-    /// <response code="400">A field is missing or not valid.</response>
+    /// <response code="400">A field is missing or not valid, or the icon is not one the website ships with.</response>
     /// <response code="409">Another item already has that name.</response>
     [HttpPost]
     [ProducesResponseType<ItemDetail>(StatusCodes.Status201Created, Json)]
@@ -150,11 +153,17 @@ public class ItemsController(PlannerDbContext db) : PlannerControllerBase
             return NameTakenRejection(name);
         }
 
+        if (IconIsUnknown(request.Icon))
+        {
+            return ValidationProblem(ModelState);
+        }
+
         var item = new Item
         {
             Name = name,
             Description = Tidy(request.Description),
             Category = Tidy(request.Category),
+            Icon = Tidy(request.Icon),
         };
 
         db.Items.Add(item);
@@ -198,9 +207,15 @@ public class ItemsController(PlannerDbContext db) : PlannerControllerBase
             return NameTakenRejection(name);
         }
 
+        if (IconIsUnknown(request.Icon))
+        {
+            return ValidationProblem(ModelState);
+        }
+
         item.Name = name;
         item.Description = Tidy(request.Description);
         item.Category = Tidy(request.Category);
+        item.Icon = Tidy(request.Icon);
         await db.SaveChangesAsync(cancellationToken);
 
         return await SavedItemAsync(id, cancellationToken);
@@ -260,6 +275,16 @@ public class ItemsController(PlannerDbContext db) : PlannerControllerBase
         if (request.Category is not null)
         {
             item.Category = Tidy(request.Category);
+        }
+
+        if (request.Icon is not null)
+        {
+            if (IconIsUnknown(request.Icon))
+            {
+                return ValidationProblem(ModelState);
+            }
+
+            item.Icon = Tidy(request.Icon);
         }
 
         await db.SaveChangesAsync(cancellationToken);
@@ -336,6 +361,23 @@ public class ItemsController(PlannerDbContext db) : PlannerControllerBase
             .Replace("%", LikeEscape + "%")
             .Replace("_", LikeEscape + "_");
 
+    /// <summary>
+    /// Checks whether an icon name refers to a picture the website does not have, and if so
+    /// records the problem against the icon field. Blank means "no icon" and is always fine.
+    /// </summary>
+    /// <param name="icon">The icon name that was sent.</param>
+    /// <returns>True when the icon is unknown.</returns>
+    private bool IconIsUnknown(string? icon)
+    {
+        if (Tidy(icon) is not { } name || icons.Contains(name))
+        {
+            return false;
+        }
+
+        ModelState.AddModelError("icon", ItemRules.IconUnknown);
+        return true;
+    }
+
     /// <summary>Checks whether a name is already used by another item.</summary>
     /// <param name="name">The name to check. Upper and lower case are treated the same.</param>
     /// <param name="exceptId">Id of an item to leave out of the check, so an item does not clash with itself.</param>
@@ -392,6 +434,7 @@ public class ItemsController(PlannerDbContext db) : PlannerControllerBase
             Name = item.Name,
             Description = item.Description,
             Category = item.Category,
+            Icon = item.Icon,
             Kind = item.Recipe is null ? ItemKind.Raw : ItemKind.Crafted,
             Recipe = item.Recipe is null
                 ? null

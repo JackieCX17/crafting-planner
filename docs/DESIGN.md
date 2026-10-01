@@ -79,6 +79,7 @@ erDiagram
 | Item | Name | text | Required, unique, 1 to 80 characters |
 | Item | Description | text | Optional, up to 500 characters |
 | Item | Category | text | Optional, up to 40 characters, used for filtering |
+| Item | Icon | text | Optional, up to 40 characters. Names one of the pictures the website ships with (added after stage 6, see section 7) |
 | Recipe | Id | whole number | Set by the database |
 | Recipe | OutputItemId | whole number | Required, must be an existing item, one recipe per item |
 | Recipe | OutputQuantity | whole number | 1 to 1,000. How many units one craft makes |
@@ -121,6 +122,8 @@ Every rejection uses the same standard error format (Problem Details), with a sh
 | The loop search visits the nearest items first | The loop reported to the caller is the shortest one, which is the easiest to understand and fix |
 | A recipe has at most 20 ingredients | Keeps one request from creating an unreasonable amount of work |
 | A recipe tree stops at 2,000 nodes and marks what it left out | A tree repeats shared items, so a wide, deep set of recipes could make one that is far too large to send or draw. Growing it level by level puts the cut at the deepest levels, where it matters least |
+| An item's icon must be one of the pictures the website ships with, listed by `GET /api/icons` | The API refuses a name with no file behind it, so the website never shows a broken picture. The list comes from the files on disk, so adding an icon file is all it takes to offer a new one |
+| At startup, the app compares the database file with the code and stops with a plain message if a column is missing | Tables are created on first run but never altered. When the Icon column was added, an older file would otherwise fail on the first request with a database error. A deployed app would use migrations instead; this check is the honest stand-in for a project with no deployed database |
 | The plan export is one table with a Type column | A single table opens cleanly in any spreadsheet program. Two tables in one file do not |
 
 ## 5. The planning calculation
@@ -215,6 +218,12 @@ All addresses start with `/api`. Requests and responses use JSON.
 | PUT | `/recipes/{id}/ingredients/{itemId}` | Add an ingredient, or change its quantity |
 | DELETE | `/recipes/{id}/ingredients/{itemId}` | Remove an ingredient |
 
+### Icons
+
+| Method | Address | Purpose |
+|---|---|---|
+| GET | `/icons` | The pictures an item can be given, with their authors |
+
 ### Planning and summaries
 
 | Method | Address | Purpose |
@@ -245,9 +254,13 @@ Four pages of plain HTML, CSS, and JavaScript, served by the same app from its `
 | Page | Purpose | API it uses |
 |---|---|---|
 | Home | Totals and highlights, and the way in to each page | Stats |
-| Plan | Pick an item and a quantity; show the raw materials, the steps in order, the total time; download as CSV | Items list, plan, export |
+| Plan | Pick an item with the picker and a quantity; show the raw materials, the steps in order, the total time; download as CSV | Items list, plan, export |
 | Items | Search, filter, sort, and page through items; add and delete | Items |
-| Item | Edit details; create, edit, or delete the recipe; see what the item is used in; view the recipe tree | Items, recipes, tree |
+| Item | Edit details and picture; create, edit, or delete the recipe, adding ingredients with the picker; see what the item is used in; view the recipe tree | Items, recipes, tree, icons |
+
+### The item picker (added after stage 6)
+
+Wherever a page needs the person to choose an item, it shows the same picker: a search box, a row of category chips, and the matching items with a button on each. It replaced plain dropdowns, which do not scale past a few dozen items and give no way to narrow by category. The picker filters in the browser from the full item list, which is right for hundreds of items; at thousands it would ask the API to search instead, and the list endpoint already supports that.
 
 ### Rules the pages follow
 
@@ -259,6 +272,10 @@ Four pages of plain HTML, CSS, and JavaScript, served by the same app from its `
 | No framework and no build step | A reviewer runs one command and reads plain files. The trade-off, more hand-written code than a framework would need, is acceptable at four pages |
 | Colours are defined once as variables, with a second set for dark mode | The site follows the reader's system setting without any extra code |
 | Every JavaScript function has a structured comment | The same documentation standard as the C# code |
+
+### Item pictures (added after stage 6)
+
+Each item can carry an icon, chosen from a set of pictures shipped in the website's `icons` folder. They come from [game-icons.net](https://game-icons.net) under the Creative Commons Attribution 3.0 license; the authors are credited on the Home page and in `icons/LICENSE.md`. The files are single-colour SVGs used as masks, so one file follows the page's text colour in both light and dark mode. An item with no icon of its own shows a faint default for its category.
 
 ## 8. Technology choices
 
