@@ -40,6 +40,7 @@ async function loadItem() {
   await fillIconSelect(item.icon);
 
   drawUsedIn();
+  drawOnLists();
   drawRecipe();
   await drawTree();
 
@@ -95,6 +96,23 @@ function drawUsedIn() {
     table(
       [{ text: "Item" }, { text: "Per craft", num: true }],
       item.usedIn.map((use) => [itemLink(use.itemId, use.itemName, lookupItem(use.itemId)), use.quantity]),
+    ),
+  );
+}
+
+/**
+ * Draws the shopping lists this item is on.
+ */
+function drawOnLists() {
+  const panel = document.getElementById("on-lists");
+  if (item.onLists.length === 0) {
+    panel.replaceChildren(el("p", { class: "muted" }, "Not on any list."));
+    return;
+  }
+  panel.replaceChildren(
+    table(
+      [{ text: "List" }, { text: "Quantity", num: true }],
+      item.onLists.map((use) => [el("a", { href: `list.html?id=${use.listId}` }, use.listName), use.quantity]),
     ),
   );
 }
@@ -304,7 +322,8 @@ async function saveDetails(event) {
  * other recipes still use the item, and the rejection lists them.
  */
 async function deleteItem() {
-  if (!window.confirm(`Delete "${item.name}"? Its own recipe is deleted with it.`)) {
+  const listNote = item.onLists.length > 0 ? ` It is also taken off ${item.onLists.length} list${item.onLists.length === 1 ? "" : "s"}.` : "";
+  if (!window.confirm(`Delete "${item.name}"? Its own recipe is deleted with it.${listNote}`)) {
     return;
   }
   try {
