@@ -21,31 +21,31 @@ public static class SeedData
         }
 
         // Raw materials: gathered, not crafted.
-        var log = NewItem("Log", "Raw Material", "Wood cut from a tree.");
-        var ironOre = NewItem("Iron Ore", "Raw Material", "Rock that contains iron.");
-        var coal = NewItem("Coal", "Raw Material", "Fuel for smelting and lighting.");
-        var cobblestone = NewItem("Cobblestone", "Raw Material", "Rough stone.");
-        var thread = NewItem("String", "Raw Material", "Thin cord.");
-        var flint = NewItem("Flint", "Raw Material", "A hard stone that splits into sharp edges.");
-        var feather = NewItem("Feather", "Raw Material", "Keeps an arrow flying straight.");
+        var log = NewItem("Log", "Raw Material", "log", "Wood cut from a tree.");
+        var ironOre = NewItem("Iron Ore", "Raw Material", "ore", "Rock that contains iron.");
+        var coal = NewItem("Coal", "Raw Material", "coal-pile", "Fuel for smelting and lighting.");
+        var cobblestone = NewItem("Cobblestone", "Raw Material", "stone-block", "Rough stone.");
+        var thread = NewItem("String", "Raw Material", "yarn", "Thin cord.");
+        var flint = NewItem("Flint", "Raw Material", "flint-spark", "A hard stone that splits into sharp edges.");
+        var feather = NewItem("Feather", "Raw Material", "feather", "Keeps an arrow flying straight.");
 
         // Components: crafted, then used to craft other things.
-        var plank = NewItem("Plank", "Component", "A board sawn from a log.");
-        var stick = NewItem("Stick", "Component", "A handle or shaft.");
-        var ironIngot = NewItem("Iron Ingot", "Component", "A bar of smelted iron.");
+        var plank = NewItem("Plank", "Component", "planks", "A board sawn from a log.");
+        var stick = NewItem("Stick", "Component", "wood-stick", "A handle or shaft.");
+        var ironIngot = NewItem("Iron Ingot", "Component", "metal-bar", "A bar of smelted iron.");
 
         // Finished items.
-        var sword = NewItem("Sword", "Weapon", "An iron blade on a wooden grip.");
-        var pickaxe = NewItem("Pickaxe", "Tool", "Breaks stone and ore.");
-        var bow = NewItem("Bow", "Weapon", "Fires arrows.");
-        var arrow = NewItem("Arrow", "Weapon", "Ammunition for a bow.");
-        var torch = NewItem("Torch", "Utility", "A portable light.");
-        var furnace = NewItem("Furnace", "Utility", "Smelts ore into ingots.");
-        var chest = NewItem("Chest", "Utility", "Stores items.");
+        var sword = NewItem("Sword", "Weapon", "broadsword", "An iron blade on a wooden grip.");
+        var pickaxe = NewItem("Pickaxe", "Tool", "war-pick", "Breaks stone and ore.");
+        var bow = NewItem("Bow", "Weapon", "pocket-bow", "Fires arrows.");
+        var arrow = NewItem("Arrow", "Weapon", "broadhead-arrow", "Ammunition for a bow.");
+        var torch = NewItem("Torch", "Utility", "torch", "A portable light.");
+        var furnace = NewItem("Furnace", "Utility", "furnace", "Smelts ore into ingots.");
+        var chest = NewItem("Chest", "Utility", "chest", "Stores items.");
 
         // Kits: finished items bundled together. These have the longest chains.
-        var toolKit = NewItem("Tool Kit", "Kit", "A sword and a pickaxe.");
-        var hunterKit = NewItem("Hunter Kit", "Kit", "A bow with arrows, packed in a chest.");
+        var toolKit = NewItem("Tool Kit", "Kit", "toolbox", "A sword and a pickaxe.");
+        var hunterKit = NewItem("Hunter Kit", "Kit", "knapsack", "A bow with arrows, packed in a chest.");
 
         db.Items.AddRange(
             log, ironOre, coal, cobblestone, thread, flint, feather,
@@ -73,10 +73,11 @@ public static class SeedData
     /// <summary>Builds an item that has not been saved yet.</summary>
     /// <param name="name">Display name.</param>
     /// <param name="category">Group the item belongs to.</param>
+    /// <param name="icon">Name of its picture, one of the icons the website ships with.</param>
     /// <param name="description">What the item is.</param>
     /// <returns>The new item.</returns>
-    private static Item NewItem(string name, string category, string description) =>
-        new() { Name = name, Category = category, Description = description };
+    private static Item NewItem(string name, string category, string icon, string description) =>
+        new() { Name = name, Category = category, Icon = icon, Description = description };
 
     /// <summary>Builds a recipe that has not been saved yet.</summary>
     /// <param name="output">The item the recipe makes.</param>
