@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using CraftingPlanner.Api.Data;
+using CraftingPlanner.Api.Services;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
 using Microsoft.EntityFrameworkCore;
 
@@ -30,6 +31,9 @@ var databaseFile = Path.Combine(
 builder.Services.AddDbContext<PlannerDbContext>(options =>
     options.UseSqlite($"Data Source={databaseFile}"));
 
+// The pictures an item can be given: read from the website's icons folder once.
+builder.Services.AddSingleton<IconCatalog>();
+
 // The API description that the interactive page is drawn from.
 builder.Services.AddOpenApi(options =>
     options.AddDocumentTransformer((document, _, _) =>
@@ -49,11 +53,27 @@ builder.Services.AddOpenApi(options =>
 
 var app = builder.Build();
 
-// On first run, create the database tables and add the sample data.
+// On first run, create the database tables and add the sample data. On later runs, make
+// sure the file still matches the code, and stop with a plain message if it does not.
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<PlannerDbContext>();
-    db.Database.EnsureCreated();
+    var created = db.Database.EnsureCreated();
+
+    if (!created)
+    {
+        var missing = SchemaCheck.FindMissingColumns(db);
+        if (missing.Count > 0)
+        {
+            app.Logger.LogCritical(
+                "The database file {File} was made by an older version of the app and lacks: {Missing}. "
+                + "Stop the app, delete the file, and start again. The sample data comes back.",
+                databaseFile,
+                string.Join(", ", missing));
+            return 1;
+        }
+    }
+
     SeedData.AddIfEmpty(db);
 }
 
@@ -78,6 +98,8 @@ app.UseStaticFiles();
 app.MapControllers();
 
 app.Run();
+
+return 0;
 
 // The rules for reading and writing JSON.
 static void ApplyJsonRules(JsonSerializerOptions json)
