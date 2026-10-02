@@ -61,8 +61,9 @@ Plain HTML, CSS, and JavaScript, served by the same app. Every page reaches the 
 | Lists | Saved sets of items to make, each with a quantity. Create as many as you like |
 | List | Add items with the picker, set quantities, and see what it takes to make everything on the list, redrawn after every change. Download as CSV |
 | Plan | Pick one item by search or category, and a quantity. Get the raw materials, the crafting steps in order, the total time, and a CSV download |
-| Items | Search, filter by category or by whether an item has a recipe, sort, and page. Add items |
-| Item | Edit an item's details and picture, create or edit its recipe with a picker for ingredients, see what it is used in and which lists it is on, and view its recipe tree |
+| Items | Search, filter by category or by whether an item has a recipe, sort, and page |
+| New item | One form for the item and, if it has one, its recipe: tick the box, pick ingredients, save |
+| Item | The same form filled in, plus what the item is used in, which lists it is on, and its recipe tree |
 
 Rejections from the API appear on the page in plain words. Try giving Planks a recipe that uses Sticks, and the page explains the loop.
 

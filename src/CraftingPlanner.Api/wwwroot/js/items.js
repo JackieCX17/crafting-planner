@@ -1,15 +1,14 @@
-/* The Items page: a filterable, paged list and a form to add an item. Editing and
-   deleting happen on the item's own page, where what it is used in can be seen. */
+/* The Items page: a filterable, paged list. Adding happens on the New item page, and
+   editing and deleting on the item's own page, where what it is used in can be seen. */
 
 const listNotice = document.getElementById("list-notice");
-const addNotice = document.getElementById("add-notice");
 const pageSize = 20;
 let currentPage = 1;
 
 /**
- * Fills the category dropdown and the category suggestions from the items that exist.
- * They are worked out in the browser from the full item list, which suits hundreds of
- * items; at thousands, the API would be asked for the distinct categories instead.
+ * Fills the category dropdown from the items that exist. The categories are worked out
+ * in the browser from the full item list, which suits hundreds of items; at thousands,
+ * the API would be asked for the distinct categories instead.
  */
 async function setUpCategories() {
   let items;
@@ -26,8 +25,6 @@ async function setUpCategories() {
     ...categoriesOf(items).map((name) => el("option", { value: name }, name)),
   );
   select.value = chosen;
-
-  fillCategoryDatalist(document.getElementById("categories"), items);
 }
 
 /**
@@ -91,30 +88,6 @@ async function loadItems() {
   document.getElementById("prev").disabled = result.page <= 1;
   document.getElementById("next").disabled = result.page >= result.totalPages;
 }
-
-/**
- * Creates an item from the add form, then opens its page.
- * @param {Event} event The form's submit event.
- */
-async function addItem(event) {
-  event.preventDefault();
-  clearNotice(addNotice);
-
-  const request = {
-    name: document.getElementById("add-name").value,
-    category: document.getElementById("add-category").value,
-    description: document.getElementById("add-description").value,
-  };
-
-  try {
-    const item = await api.post("/api/items", request);
-    window.location.href = `item.html?id=${item.id}`;
-  } catch (error) {
-    showProblem(addNotice, error);
-  }
-}
-
-document.getElementById("add-form").addEventListener("submit", addItem);
 
 /** The timer that waits for typing to pause before searching. */
 let searchTimer = null;

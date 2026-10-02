@@ -303,8 +303,9 @@ Four pages of plain HTML, CSS, and JavaScript, served by the same app from its `
 |---|---|---|
 | Home | Totals and highlights, and the way in to each page | Stats |
 | Plan | Pick an item with the picker and a quantity; show the raw materials, the steps in order, the total time; download as CSV | Items list, plan, export |
-| Items | Search, filter by category or by whether an item has a recipe, sort, and page; add an item | Items |
-| Item | Edit details and picture; create, edit, or delete the recipe, adding ingredients with the picker; see what the item is used in and which lists it is on; view the recipe tree | Items, recipes, tree, icons |
+| Items | Search, filter by category or by whether an item has a recipe, sort, and page | Items |
+| New item | One form: name, category, description, picture, and a tick box "This item has a recipe" that opens the recipe fields and the ingredient picker. One Save | Items, recipes, icons |
+| Item | The same form, filled in; what the item is used in and which lists it is on; the recipe tree; delete | Items, recipes, tree, icons |
 | Lists (added after stage 6) | Every saved list with its item count; create and delete | Lists |
 | List (added after stage 6) | The items on one list with editable quantities, the picker to add more, and the plan for everything on it, redrawn after every change; rename, delete, download | Lists, list entries, list plan, export |
 
@@ -326,6 +327,7 @@ Wherever a page needs the person to choose an item, it shows the same picker: a 
 | The pages never show the words "raw" and "crafted"; an item with a recipe carries a small "recipe" tag, and the filter asks "has a recipe?" | The fact underneath is whether a recipe exists, and saying so plainly avoids jargon. The API keeps `kind` with those two values, documented as exactly that fact |
 | Category is chosen from the categories in use, and typing one offers the existing names | Keeps spelling consistent without making categories a separate record to manage |
 | The Items list reloads as the search text or a filter changes, after a short pause for typing | No "apply" step to forget. The pause keeps the API from being asked on every keystroke |
+| An item and its recipe are one form with one Save, on the New item page and the Item page alike | The first version needed two pages and a hidden editor to add a craftable item, which was too many steps. The page makes the two API calls (item, then recipe) itself; if the recipe is refused after the item is created, the form keeps the item and switches to editing it, so a second Save cannot create the item twice |
 
 ### Item pictures (added after stage 6)
 

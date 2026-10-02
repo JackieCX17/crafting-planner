@@ -21,27 +21,14 @@
   </header>
 
   <main>
-    <h1>Items</h1>
-    <p class="lead">Everything that can be crafted or used as an ingredient. Open an item to edit it, give it a recipe, or delete it.</p>
-
-    <datalist id="categories"></datalist>
-
-    <div class="card">
-      <h2>Add an item</h2>
-      <p class="muted">A new item starts as a gathered material with no recipe. Its page opens next, where you can give it a recipe and a picture.</p>
-      <form id="add-form" class="row">
-        <label>Name
-          <input id="add-name" required maxlength="80" placeholder="Copper Ore">
-        </label>
-        <label>Category
-          <input id="add-category" maxlength="40" placeholder="Raw Material" list="categories">
-        </label>
-        <label>Description
-          <input id="add-description" maxlength="500" placeholder="Rock that contains copper." size="40">
-        </label>
-        <button class="btn" type="submit">Add and open</button>
-      </form>
-      <div id="add-notice" class="notice"></div>
+    <div class="toolbar">
+      <div>
+        <h1>Items</h1>
+        <p class="lead">Everything that can be crafted or used as an ingredient. Open an item to change it.</p>
+      </div>
+      <div class="actions">
+        <a class="btn" href="new.html">New item</a>
+      </div>
     </div>
 
     <div class="card">
