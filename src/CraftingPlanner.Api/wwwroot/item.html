@@ -32,6 +32,7 @@
     </div>
 
     <div id="page-notice" class="notice"></div>
+    <datalist id="categories"></datalist>
 
     <div id="content" class="hidden">
       <div class="grid">
@@ -42,7 +43,7 @@
               <input id="name" required maxlength="80">
             </label>
             <label>Category
-              <input id="category" maxlength="40">
+              <input id="category" maxlength="40" list="categories">
             </label>
             <label>Description
               <textarea id="description" maxlength="500" rows="3"></textarea>

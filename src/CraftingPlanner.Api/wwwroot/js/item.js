@@ -29,9 +29,11 @@ async function loadItem() {
   document.title = `${item.name} | Crafting Planner`;
   document.getElementById("title").replaceChildren(itemIcon(item, true), item.name);
   document.getElementById("subtitle").replaceChildren(
-    kindTag(item.kind),
-    item.category ? ` · ${item.category}` : "",
+    item.category || "No category",
+    " ",
+    recipeTag(item.kind),
   );
+  fillCategoryDatalist(document.getElementById("categories"), allItems);
   document.getElementById("plan-link").href = `plan.html?id=${item.id}`;
 
   document.getElementById("name").value = item.name;
@@ -369,11 +371,10 @@ function treeBranch(node, isRoot) {
   }
   const known = lookupItem(node.itemId);
   line.appendChild(isRoot ? el("strong", {}, known ? itemIcon(known) : "", node.itemName) : itemLink(node.itemId, node.itemName, known));
-  line.appendChild(document.createTextNode(" "));
-  line.appendChild(kindTag(node.kind));
-
   if (node.kind === "crafted") {
     line.appendChild(el("span", { class: "note" }, ` makes ${node.outputQuantity} per craft`));
+  } else {
+    line.appendChild(el("span", { class: "note" }, " gathered"));
   }
 
   if (node.truncated) {

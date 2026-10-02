@@ -327,7 +327,7 @@ tr.total td {
   opacity: 0.45;
 }
 
-/* Tags for raw and crafted */
+/* The small tag that marks an item as having a recipe */
 
 .tag {
   display: inline-block;
@@ -339,14 +339,9 @@ tr.total td {
   letter-spacing: 0.04em;
 }
 
-.tag.crafted {
+.tag.recipe {
   background: var(--accent-soft);
   color: var(--accent);
-}
-
-.tag.raw {
-  background: var(--raw-soft);
-  color: var(--raw);
 }
 
 /* Recipe tree */

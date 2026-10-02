@@ -1,9 +1,34 @@
-/* The Items page: a filterable, paged list, a form to add an item, and delete buttons. */
+/* The Items page: a filterable, paged list and a form to add an item. Editing and
+   deleting happen on the item's own page, where what it is used in can be seen. */
 
 const listNotice = document.getElementById("list-notice");
 const addNotice = document.getElementById("add-notice");
 const pageSize = 20;
 let currentPage = 1;
+
+/**
+ * Fills the category dropdown and the category suggestions from the items that exist.
+ * They are worked out in the browser from the full item list, which suits hundreds of
+ * items; at thousands, the API would be asked for the distinct categories instead.
+ */
+async function setUpCategories() {
+  let items;
+  try {
+    items = await loadAllItems();
+  } catch {
+    return; // The list below will report the problem.
+  }
+
+  const select = document.getElementById("category");
+  const chosen = select.value;
+  select.replaceChildren(
+    el("option", { value: "" }, "Any"),
+    ...categoriesOf(items).map((name) => el("option", { value: name }, name)),
+  );
+  select.value = chosen;
+
+  fillCategoryDatalist(document.getElementById("categories"), items);
+}
 
 /**
  * Builds the address of the list request from the filter form and the current page.
@@ -12,7 +37,7 @@ let currentPage = 1;
 function listAddress() {
   const params = new URLSearchParams({ page: currentPage, pageSize });
   const search = document.getElementById("search").value.trim();
-  const category = document.getElementById("category").value.trim();
+  const category = document.getElementById("category").value;
   const kind = document.getElementById("kind").value;
   const sort = document.getElementById("sort").value;
 
@@ -49,13 +74,11 @@ async function loadItems() {
   } else {
     list.replaceChildren(
       table(
-        [{ text: "Name" }, { text: "Category" }, { text: "Kind" }, { text: "Description" }, { text: "" }],
+        [{ text: "Name" }, { text: "Category" }, { text: "Description" }],
         result.items.map((item) => [
-          itemLink(item.id, item.name, item),
+          el("span", {}, itemLink(item.id, item.name, item), " ", recipeTag(item.kind)),
           item.category || "",
-          kindTag(item.kind),
           item.description || "",
-          deleteButton(item),
         ]),
       ),
     );
@@ -67,29 +90,6 @@ async function loadItems() {
     result.totalCount === 0 ? "" : `Showing ${first} to ${last} of ${formatNumber(result.totalCount)}`;
   document.getElementById("prev").disabled = result.page <= 1;
   document.getElementById("next").disabled = result.page >= result.totalPages;
-}
-
-/**
- * Builds the delete button for one row. Deleting asks first, and the API refuses
- * when other recipes still use the item.
- * @param {object} item The item.
- * @returns {HTMLElement} The button.
- */
-function deleteButton(item) {
-  const button = el("button", { class: "btn danger small", type: "button" }, "Delete");
-  button.addEventListener("click", async () => {
-    if (!window.confirm(`Delete "${item.name}"? Its own recipe is deleted with it.`)) {
-      return;
-    }
-    try {
-      await api.delete(`/api/items/${item.id}`);
-      showSuccess(listNotice, `"${item.name}" was deleted.`);
-      await loadItems();
-    } catch (error) {
-      showProblem(listNotice, error);
-    }
-  });
-  return button;
 }
 
 /**
@@ -132,4 +132,5 @@ document.getElementById("next").addEventListener("click", () => {
   loadItems();
 });
 
+setUpCategories();
 loadItems();

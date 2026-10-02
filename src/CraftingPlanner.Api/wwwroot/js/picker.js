@@ -62,7 +62,7 @@ function createPicker({ items, onPick, buttonText = "Add", isDisabled = () => fa
         return el(
           "div",
           { class: "picker-row" },
-          el("span", { class: "picker-name" }, itemIcon(item), item.name, " ", kindTag(item.kind)),
+          el("span", { class: "picker-name" }, itemIcon(item), item.name, " ", recipeTag(item.kind)),
           el("span", { class: "muted picker-category" }, item.category || ""),
           button,
         );

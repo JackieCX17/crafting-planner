@@ -22,7 +22,9 @@
 
   <main>
     <h1>Items</h1>
-    <p class="lead">Everything that can be crafted or used as an ingredient. Open an item to edit it or its recipe.</p>
+    <p class="lead">Everything that can be crafted or used as an ingredient. Open an item to edit it, give it a recipe, or delete it.</p>
+
+    <datalist id="categories"></datalist>
 
     <div class="card">
       <h2>Add an item</h2>
@@ -31,7 +33,7 @@
           <input id="add-name" required maxlength="80" placeholder="Copper Ore">
         </label>
         <label>Category
-          <input id="add-category" maxlength="40" placeholder="Raw Material">
+          <input id="add-category" maxlength="40" placeholder="Raw Material" list="categories">
         </label>
         <label>Description
           <input id="add-description" maxlength="500" placeholder="Rock that contains copper." size="40">
@@ -47,13 +49,15 @@
           <input id="search" maxlength="80" placeholder="name or description">
         </label>
         <label>Category
-          <input id="category" maxlength="40" placeholder="any">
+          <select id="category">
+            <option value="">Any</option>
+          </select>
         </label>
-        <label>Kind
+        <label>Recipe
           <select id="kind">
             <option value="">Any</option>
-            <option value="raw">Raw</option>
-            <option value="crafted">Crafted</option>
+            <option value="crafted">Has a recipe</option>
+            <option value="raw">No recipe</option>
           </select>
         </label>
         <label>Sort by
