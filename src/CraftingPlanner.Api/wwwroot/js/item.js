@@ -66,7 +66,7 @@ function drawUsedIn() {
   }
   panel.replaceChildren(
     table(
-      [{ text: "Item" }, { text: "Per craft", num: true }],
+      [{ text: "Item" }, { text: "Per batch", num: true }],
       item.usedIn.map((use) => [itemLink(use.itemId, use.itemName, lookupItem(use.itemId)), use.quantity]),
     ),
   );
@@ -152,7 +152,7 @@ function treeBranch(node, isRoot) {
   line.appendChild(isRoot ? el("strong", {}, known ? itemIcon(known) : "", node.itemName) : itemLink(node.itemId, node.itemName, known));
 
   if (node.kind === "crafted") {
-    line.appendChild(el("span", { class: "note" }, ` makes ${node.outputQuantity} per craft`));
+    line.appendChild(el("span", { class: "note" }, ` makes ${node.outputQuantity} per batch`));
   } else {
     line.appendChild(el("span", { class: "note" }, " gathered"));
   }

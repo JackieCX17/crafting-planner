@@ -12,7 +12,7 @@ function drawPlan(into, plan, knownItems) {
   into.count.textContent =
     plan.steps.length === 0
       ? "Nothing to craft."
-      : `${plan.steps.length} step${plan.steps.length === 1 ? "" : "s"}, ${formatNumber(plan.steps.reduce((sum, step) => sum + step.crafts, 0))} crafts in all`;
+      : `${plan.steps.length} step${plan.steps.length === 1 ? "" : "s"}, ${formatNumber(plan.steps.reduce((sum, step) => sum + step.crafts, 0))} batches in all`;
 
   into.raw.replaceChildren(
     plan.rawMaterials.length === 0
@@ -33,7 +33,7 @@ function drawPlan(into, plan, knownItems) {
       { text: "#" },
       { text: "Craft" },
       { text: "Required #", num: true },
-      { text: "Times to craft", num: true },
+      { text: "Batches", num: true },
       { text: "Produced #", num: true },
       { text: "Left over", num: true },
       { text: "Time", num: true },
