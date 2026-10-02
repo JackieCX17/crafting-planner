@@ -67,7 +67,7 @@ Plain HTML, CSS, and JavaScript, served by the same app. Every page reaches the 
 
 Rejections from the API appear on the page in plain words. Try giving Planks a recipe that uses Sticks, and the page explains the loop.
 
-Item pictures are by Lorc, Delapouite, and Faithtoken from [game-icons.net](https://game-icons.net), used under the [Creative Commons Attribution 3.0](https://creativecommons.org/licenses/by/3.0/) license. See `src/CraftingPlanner.Api/wwwroot/icons/LICENSE.md`.
+Item pictures are from [game-icons.net](https://game-icons.net), used under the [Creative Commons Attribution 3.0](https://creativecommons.org/licenses/by/3.0/) license. Every author is credited in `src/CraftingPlanner.Api/wwwroot/icons/LICENSE.md`.
 
 ![The Item page for the Sword: details, the recipe, what it is used in, and the recipe tree](docs/images/item.png)
 
