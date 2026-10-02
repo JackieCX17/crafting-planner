@@ -28,6 +28,7 @@
 
     <div class="card">
       <h2>Add an item</h2>
+      <p class="muted">A new item starts as a gathered material with no recipe. Its page opens next, where you can give it a recipe and a picture.</p>
       <form id="add-form" class="row">
         <label>Name
           <input id="add-name" required maxlength="80" placeholder="Copper Ore">
@@ -38,7 +39,7 @@
         <label>Description
           <input id="add-description" maxlength="500" placeholder="Rock that contains copper." size="40">
         </label>
-        <button class="btn" type="submit">Add</button>
+        <button class="btn" type="submit">Add and open</button>
       </form>
       <div id="add-notice" class="notice"></div>
     </div>
@@ -67,8 +68,8 @@
             <option value="id">Newest first</option>
           </select>
         </label>
-        <button class="btn secondary" type="submit">Apply</button>
       </form>
+      <p class="muted" style="font-size: 14px">The list updates as you type and choose.</p>
       <div id="list-notice" class="notice"></div>
       <div id="list"></div>
       <div class="toolbar">

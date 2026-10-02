@@ -116,10 +116,31 @@ async function addItem(event) {
 
 document.getElementById("add-form").addEventListener("submit", addItem);
 
+/** The timer that waits for typing to pause before searching. */
+let searchTimer = null;
+
+/**
+ * Reloads the list from the first page, after a short pause when called from typing,
+ * so the API is not asked on every keystroke.
+ * @param {number} delay How long to wait, in milliseconds. 0 reloads at once.
+ */
+function reloadFromFirstPage(delay) {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => {
+    currentPage = 1;
+    loadItems();
+  }, delay);
+}
+
+document.getElementById("search").addEventListener("input", () => reloadFromFirstPage(250));
+for (const id of ["category", "kind", "sort"]) {
+  document.getElementById(id).addEventListener("change", () => reloadFromFirstPage(0));
+}
+
+// Enter in the search box searches at once instead of reloading the page.
 document.getElementById("filter-form").addEventListener("submit", (event) => {
   event.preventDefault();
-  currentPage = 1;
-  loadItems();
+  reloadFromFirstPage(0);
 });
 
 document.getElementById("prev").addEventListener("click", () => {

@@ -325,6 +325,7 @@ Wherever a page needs the person to choose an item, it shows the same picker: a 
 | Deleting happens only on an item's own page, never from a list row | A destructive button belongs where the full picture is visible: what the item is used in, and which lists it is on |
 | The pages never show the words "raw" and "crafted"; an item with a recipe carries a small "recipe" tag, and the filter asks "has a recipe?" | The fact underneath is whether a recipe exists, and saying so plainly avoids jargon. The API keeps `kind` with those two values, documented as exactly that fact |
 | Category is chosen from the categories in use, and typing one offers the existing names | Keeps spelling consistent without making categories a separate record to manage |
+| The Items list reloads as the search text or a filter changes, after a short pause for typing | No "apply" step to forget. The pause keeps the API from being asked on every keystroke |
 
 ### Item pictures (added after stage 6)
 
