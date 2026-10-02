@@ -13,6 +13,7 @@
       <nav class="site-nav">
         <a href="index.html">Home</a>
         <a href="items.html">Items</a>
+        <a href="lists.html">Lists</a>
         <a href="plan.html">Plan</a>
         <a href="swagger/index.html">API docs</a>
       </nav>
@@ -20,24 +21,14 @@
   </header>
 
   <main>
-    <h1>Items</h1>
-    <p class="lead">Everything that can be crafted or used as an ingredient. Open an item to edit it or its recipe.</p>
-
-    <div class="card">
-      <h2>Add an item</h2>
-      <form id="add-form" class="row">
-        <label>Name
-          <input id="add-name" required maxlength="80" placeholder="Copper Ore">
-        </label>
-        <label>Category
-          <input id="add-category" maxlength="40" placeholder="Raw Material">
-        </label>
-        <label>Description
-          <input id="add-description" maxlength="500" placeholder="Rock that contains copper." size="40">
-        </label>
-        <button class="btn" type="submit">Add</button>
-      </form>
-      <div id="add-notice" class="notice"></div>
+    <div class="toolbar">
+      <div>
+        <h1>Items</h1>
+        <p class="lead">Everything that can be crafted or used as an ingredient. Open an item to change it.</p>
+      </div>
+      <div class="actions">
+        <a class="btn" href="new.html">New item</a>
+      </div>
     </div>
 
     <div class="card">
@@ -46,13 +37,15 @@
           <input id="search" maxlength="80" placeholder="name or description">
         </label>
         <label>Category
-          <input id="category" maxlength="40" placeholder="any">
+          <select id="category">
+            <option value="">Any</option>
+          </select>
         </label>
-        <label>Kind
+        <label>Recipe
           <select id="kind">
             <option value="">Any</option>
-            <option value="raw">Raw</option>
-            <option value="crafted">Crafted</option>
+            <option value="crafted">Has a recipe</option>
+            <option value="raw">No recipe</option>
           </select>
         </label>
         <label>Sort by
@@ -62,8 +55,8 @@
             <option value="id">Newest first</option>
           </select>
         </label>
-        <button class="btn secondary" type="submit">Apply</button>
       </form>
+      <p class="muted" style="font-size: 14px">The list updates as you type and choose.</p>
       <div id="list-notice" class="notice"></div>
       <div id="list"></div>
       <div class="toolbar">

@@ -13,6 +13,7 @@
       <nav class="site-nav">
         <a href="index.html">Home</a>
         <a href="items.html">Items</a>
+        <a href="lists.html">Lists</a>
         <a href="plan.html">Plan</a>
         <a href="swagger/index.html">API docs</a>
       </nav>
@@ -20,20 +21,25 @@
   </header>
 
   <main>
-    <h1>Plan</h1>
-    <p class="lead">Pick an item and how many you want. The plan lists the raw materials to gather and the crafting steps in order.</p>
+    <h1>Plan one item</h1>
+    <p class="lead">Pick an item and how many you want. The plan lists the raw materials to gather and the crafting steps in order. To plan several items together, use a <a href="lists.html">list</a>.</p>
 
-    <div class="card">
-      <form id="plan-form" class="row">
-        <label>Item
-          <select id="item" required></select>
-        </label>
-        <label>Quantity
-          <input id="quantity" type="number" min="1" max="1000000" value="1" required>
-        </label>
-        <button class="btn" type="submit">Make the plan</button>
-      </form>
-      <div id="notice" class="notice"></div>
+    <div class="grid">
+      <div class="card">
+        <h2>Pick an item</h2>
+        <div id="picker"></div>
+      </div>
+      <div class="card">
+        <h2>How many</h2>
+        <div id="chosen" class="chosen muted">Nothing picked yet.</div>
+        <form id="plan-form" class="row">
+          <label>Quantity
+            <input id="quantity" type="number" min="1" max="1000000" value="1" required>
+          </label>
+          <button id="make-plan" class="btn" type="submit" disabled>Make the plan</button>
+        </form>
+        <div id="notice" class="notice"></div>
+      </div>
     </div>
 
     <div id="result" class="hidden">
@@ -58,8 +64,8 @@
       </div>
 
       <div class="card">
-        <h2>Crafting steps, in order</h2>
-        <p class="muted">Each step comes after the steps it depends on. "Left over" is what a recipe makes beyond what is needed.</p>
+        <h2>Crafting steps</h2>
+        <p class="muted">In the order to do them: each step comes after the steps it depends on. "Left over" is what a recipe makes beyond what is required.</p>
         <div id="steps"></div>
       </div>
     </div>
@@ -67,6 +73,8 @@
 
   <script src="js/ui.js"></script>
   <script src="js/api.js"></script>
+  <script src="js/picker.js"></script>
+  <script src="js/plan-view.js"></script>
   <script src="js/plan.js"></script>
 </body>
 </html>

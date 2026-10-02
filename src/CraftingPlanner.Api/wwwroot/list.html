@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>List | Crafting Planner</title>
+  <link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="inner">
+      <a class="brand" href="index.html">Crafting Planner</a>
+      <nav class="site-nav">
+        <a href="index.html">Home</a>
+        <a href="items.html">Items</a>
+        <a href="lists.html">Lists</a>
+        <a href="plan.html">Plan</a>
+        <a href="swagger/index.html">API docs</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="toolbar">
+      <div>
+        <h1 id="title">List</h1>
+        <p class="lead" id="subtitle"></p>
+      </div>
+      <div class="actions">
+        <a id="download" class="btn secondary small" href="#">Download plan as CSV</a>
+        <button id="rename" class="btn secondary small" type="button">Rename</button>
+        <button id="delete-list" class="btn danger small" type="button">Delete list</button>
+      </div>
+    </div>
+
+    <div id="page-notice" class="notice"></div>
+
+    <div id="content" class="hidden">
+      <form id="rename-form" class="card hidden">
+        <h2>Rename</h2>
+        <div class="row" style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end">
+          <label>Name
+            <input id="name" required maxlength="80">
+          </label>
+          <label>Note
+            <input id="description" maxlength="500" size="40">
+          </label>
+          <button class="btn" type="submit">Save</button>
+          <button id="cancel-rename" class="btn secondary" type="button">Cancel</button>
+        </div>
+        <div id="rename-notice" class="notice"></div>
+      </form>
+
+      <div class="grid">
+        <div class="card">
+          <h2>On this list</h2>
+          <p class="muted">Change a quantity and press Enter or click away to save it.</p>
+          <div id="entries"></div>
+          <div id="entries-notice" class="notice"></div>
+        </div>
+        <div class="card">
+          <h2>Add an item</h2>
+          <div id="picker"></div>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <h2>What it takes to make everything on the list</h2>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <h2>Raw materials to gather</h2>
+          <div id="raw"></div>
+        </div>
+        <div class="card stat">
+          <div class="value" id="total-time"></div>
+          <div class="label">Total crafting time</div>
+          <p class="muted" id="step-count"></p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Crafting steps</h2>
+        <p class="muted">In the order to do them: each step comes after the steps it depends on. An item on the list that another item on the list needs appears once, with both shares added together.</p>
+        <div id="steps"></div>
+        <div id="plan-notice" class="notice"></div>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/ui.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/picker.js"></script>
+  <script src="js/plan-view.js"></script>
+  <script src="js/list.js"></script>
+</body>
+</html>

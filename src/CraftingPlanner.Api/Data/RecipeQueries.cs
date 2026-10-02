@@ -1,3 +1,4 @@
+using CraftingPlanner.Api.Contracts;
 using CraftingPlanner.Api.Services;
 using Microsoft.EntityFrameworkCore;
 
@@ -37,6 +38,47 @@ public static class RecipeQueries
                 row.OutputQuantity,
                 row.CraftSeconds,
                 row.Ingredients.Select(line => new PlanIngredient(line.ItemId, line.Quantity)).ToList()));
+    }
+
+    /// <summary>
+    /// Loads the recipes, runs the planning calculation for one or more targets, and attaches
+    /// item names. Shared by the single-item plan and the list plan, so they cannot disagree.
+    /// </summary>
+    /// <param name="db">The database.</param>
+    /// <param name="targets">The items to make, each with a quantity.</param>
+    /// <param name="cancellationToken">Signals that the caller has stopped waiting.</param>
+    /// <returns>The plan with names, raw materials in name order.</returns>
+    /// <exception cref="PlanTooLargeException">A total would not fit in a 64-bit whole number.</exception>
+    public static async Task<NamedPlan> AssemblePlanAsync(
+        this PlannerDbContext db,
+        IReadOnlyList<PlanTarget> targets,
+        CancellationToken cancellationToken)
+    {
+        var recipes = await db.LoadPlanRecipesAsync(cancellationToken);
+        var result = PlanCalculator.Calculate(targets, recipes);
+
+        var names = await db.LoadNamesAsync(
+            result.RawMaterials.Select(raw => raw.ItemId).Concat(result.Steps.Select(step => step.ItemId)),
+            cancellationToken);
+
+        return new NamedPlan(
+            result.RawMaterials
+                .Select(raw => new RawMaterialLine { ItemId = raw.ItemId, ItemName = names[raw.ItemId], Quantity = raw.Quantity })
+                .OrderBy(line => line.ItemName)
+                .ToList(),
+            result.Steps
+                .Select(step => new PlanStepLine
+                {
+                    ItemId = step.ItemId,
+                    ItemName = names[step.ItemId],
+                    Needed = step.Needed,
+                    Crafts = step.Crafts,
+                    Made = step.Made,
+                    Leftover = step.Leftover,
+                    Seconds = step.Seconds,
+                })
+                .ToList(),
+            result.TotalSeconds);
     }
 
     /// <summary>Looks up the names of a set of items.</summary>

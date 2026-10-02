@@ -10,19 +10,13 @@ public class PlanCsvWriterTests
     [Fact]
     public void Write_ListsRawMaterialsThenStepsThenTheTotal()
     {
-        var plan = new PlanResponse
-        {
-            ItemId = 5,
-            ItemName = "Stick",
-            Quantity = 1,
-            RawMaterials = [new RawMaterialLine { ItemId = 1, ItemName = "Log", Quantity = 1 }],
-            Steps =
+        var plan = new NamedPlan(
+            [new RawMaterialLine { ItemId = 1, ItemName = "Log", Quantity = 1 }],
             [
                 new PlanStepLine { ItemId = 4, ItemName = "Plank", Needed = 2, Crafts = 1, Made = 2, Leftover = 0, Seconds = 2 },
                 new PlanStepLine { ItemId = 5, ItemName = "Stick", Needed = 1, Crafts = 1, Made = 4, Leftover = 3, Seconds = 2 },
             ],
-            TotalSeconds = 4,
-        };
+            4);
 
         var lines = PlanCsvWriter.Write(plan).Split("\r\n");
 
