@@ -15,8 +15,6 @@ async function setUpNewItemPage() {
     return;
   }
 
-  fillCategoryDatalist(document.getElementById("categories"), allItems);
-
   createItemForm({
     container: document.getElementById("form"),
     allItems,
@@ -24,6 +22,9 @@ async function setUpNewItemPage() {
     existing: null,
     onSaved: (itemId) => {
       window.location.href = `item.html?id=${itemId}`;
+    },
+    onCancel: () => {
+      window.location.href = "items.html";
     },
   });
 

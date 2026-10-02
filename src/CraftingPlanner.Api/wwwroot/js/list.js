@@ -45,7 +45,7 @@ async function loadList() {
     picker = createPicker({
       items: [...knownItems.values()],
       buttonText: "Add",
-      isDisabled: (item) => list.entries.some((entry) => entry.itemId === item.id),
+      isHidden: (item) => list.entries.some((entry) => entry.itemId === item.id),
       onPick: (item) => setQuantity(item.id, 1, true),
     });
     document.getElementById("picker").replaceChildren(picker.element);

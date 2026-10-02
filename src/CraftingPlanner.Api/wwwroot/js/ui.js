@@ -119,15 +119,6 @@ function categoriesOf(items) {
   return [...new Set(items.map((item) => item.category).filter(Boolean))].sort((a, b) => a.localeCompare(b));
 }
 
-/**
- * Fills a datalist with the categories in use, so typing a category offers the existing
- * ones and spelling stays consistent.
- * @param {HTMLDataListElement} datalist The datalist element.
- * @param {Array<object>} items Every item.
- */
-function fillCategoryDatalist(datalist, items) {
-  datalist.replaceChildren(...categoriesOf(items).map((name) => el("option", { value: name })));
-}
 
 /**
  * Builds a table.

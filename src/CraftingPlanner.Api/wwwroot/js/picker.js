@@ -10,10 +10,10 @@ const PICKER_LIMIT = 30;
  * @param {Array<object>} options.items Every item that can be picked.
  * @param {function(object): void} options.onPick Called with the item when its button is pressed.
  * @param {string} [options.buttonText] The text on each item's button. Default "Add".
- * @param {function(object): boolean} [options.isDisabled] Returns true for an item whose button should be greyed out.
+ * @param {function(object): boolean} [options.isHidden] Returns true for an item to leave out, such as one already chosen.
  * @returns {{element: HTMLElement, refresh: function(Array<object>=): void}} The picker and a way to redraw it.
  */
-function createPicker({ items, onPick, buttonText = "Add", isDisabled = () => false }) {
+function createPicker({ items, onPick, buttonText = "Add", isHidden = () => false }) {
   let all = items;
   let chosenCategory = null;
 
@@ -46,6 +46,9 @@ function createPicker({ items, onPick, buttonText = "Add", isDisabled = () => fa
   function drawResults() {
     const text = search.value.trim().toLowerCase();
     const matches = all.filter((item) => {
+      if (isHidden(item)) {
+        return false;
+      }
       const inCategory = chosenCategory === null || (item.category || "Other") === chosenCategory;
       const inText =
         text === "" ||
@@ -57,7 +60,7 @@ function createPicker({ items, onPick, buttonText = "Add", isDisabled = () => fa
     const shown = matches.slice(0, PICKER_LIMIT);
     results.replaceChildren(
       ...shown.map((item) => {
-        const button = el("button", { type: "button", class: "btn small", disabled: isDisabled(item) }, buttonText);
+        const button = el("button", { type: "button", class: "btn small" }, buttonText);
         button.addEventListener("click", () => onPick(item));
         return el(
           "div",

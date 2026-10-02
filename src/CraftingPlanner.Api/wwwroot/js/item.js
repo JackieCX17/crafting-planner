@@ -35,7 +35,6 @@ async function loadItem(message) {
   document.getElementById("title").replaceChildren(itemIcon(item, true), item.name);
   document.getElementById("subtitle").replaceChildren(item.category || "No category", " ", recipeTag(item.kind));
   document.getElementById("plan-link").href = `plan.html?id=${item.id}`;
-  fillCategoryDatalist(document.getElementById("categories"), allItems);
 
   createItemForm({
     container: document.getElementById("form"),
@@ -43,6 +42,7 @@ async function loadItem(message) {
     icons,
     existing: item,
     onSaved: () => loadItem("Saved."),
+    onCancel: () => loadItem(),
   });
 
   drawUsedIn();

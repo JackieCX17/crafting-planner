@@ -23,28 +23,46 @@ function drawPlan(into, plan, knownItems) {
         ),
   );
 
-  into.steps.replaceChildren(
-    plan.steps.length === 0
-      ? el("p", { class: "muted" }, "No crafting needed.")
-      : table(
-          [
-            { text: "#" },
-            { text: "Craft" },
-            { text: "Needed", num: true },
-            { text: "Crafts", num: true },
-            { text: "Made", num: true },
-            { text: "Left over", num: true },
-            { text: "Time", num: true },
-          ],
-          plan.steps.map((step, index) => [
-            String(index + 1),
-            itemLink(step.itemId, step.itemName, knownItems.get(step.itemId)),
-            step.needed,
-            step.crafts,
-            step.made,
-            step.leftover,
-            formatSeconds(step.seconds),
-          ]),
-        ),
+  if (plan.steps.length === 0) {
+    into.steps.replaceChildren(el("p", { class: "muted" }, "No crafting needed."));
+    return;
+  }
+
+  const steps = table(
+    [
+      { text: "#" },
+      { text: "Craft" },
+      { text: "Required #", num: true },
+      { text: "Times to craft", num: true },
+      { text: "Produced #", num: true },
+      { text: "Left over", num: true },
+      { text: "Time", num: true },
+    ],
+    plan.steps.map((step, index) => [
+      String(index + 1),
+      itemLink(step.itemId, step.itemName, knownItems.get(step.itemId)),
+      step.needed,
+      step.crafts,
+      step.made,
+      step.leftover,
+      formatSeconds(step.seconds),
+    ]),
   );
+
+  // A last row with the totals that add up: crafts and time.
+  steps.querySelector("tbody").appendChild(
+    el(
+      "tr",
+      { class: "total" },
+      el("td", {}),
+      el("td", {}, "Total"),
+      el("td", {}),
+      el("td", { class: "num" }, formatNumber(plan.steps.reduce((sum, step) => sum + step.crafts, 0))),
+      el("td", {}),
+      el("td", {}),
+      el("td", { class: "num" }, formatSeconds(plan.totalSeconds)),
+    ),
+  );
+
+  into.steps.replaceChildren(steps);
 }

@@ -10,13 +10,22 @@
  * @param {Array<object>} options.icons The pictures an item can be given, from the API.
  * @param {object|null} options.existing The item being changed, with its recipe, or null for a new item.
  * @param {function(number): void} options.onSaved Called with the item's id after a successful save.
+ * @param {function(): void} options.onCancel Called when the Cancel button is pressed.
  */
-function createItemForm({ container, allItems, icons, existing, onSaved }) {
+function createItemForm({ container, allItems, icons, existing, onSaved, onCancel }) {
   const notice = el("div", { class: "notice" });
 
-  // Details
+  // Details. The category is chosen from the ones in use; the last choice reveals a box
+  // for a category that does not exist yet.
+  const NEW_CATEGORY = "__new__";
   const name = el("input", { id: "name", required: true, maxlength: 80, placeholder: "Copper Ore" });
-  const category = el("input", { id: "category", maxlength: 40, placeholder: "Raw Material", list: "categories" });
+  const category = el("select", { id: "category" });
+  const newCategory = el("input", { id: "new-category", class: "hidden", maxlength: 40, placeholder: "Type the new category", style: "margin-top: 6px" });
+  category.replaceChildren(
+    el("option", { value: "" }, "No category"),
+    ...categoriesOf(allItems).map((entry) => el("option", { value: entry }, entry)),
+    el("option", { value: NEW_CATEGORY }, "New category…"),
+  );
   const description = el("textarea", { id: "description", maxlength: 500, rows: 2, placeholder: "What it is." });
   const iconPreview = el("span");
   const icon = el("select", { id: "icon", style: "flex: 1" });
@@ -46,28 +55,30 @@ function createItemForm({ container, allItems, icons, existing, onSaved }) {
   );
 
   const saveButton = el("button", { class: "btn", type: "submit" }, existing ? "Save" : "Create item");
+  const cancelButton = el("button", { class: "btn secondary", type: "button" }, existing ? "Discard changes" : "Cancel");
   const form = el(
     "form",
     { id: "item-form" },
     el("div", { class: "grid" },
       el("div", {},
         el("label", {}, "Name", name),
-        el("label", {}, "Category", category),
+        el("label", {}, "Category", category, newCategory),
         el("label", {}, "Description", description),
         el("label", {}, "Picture", el("span", { style: "display: flex; gap: 8px; align-items: center" }, iconPreview, icon))),
       el("div", {},
         el("label", { class: "checkbox" }, hasRecipe, " This item has a recipe"),
         el("p", { class: "muted", style: "font-size: 14px" }, "Leave it unticked for a material that is gathered, not made."),
         recipeSection)),
-    el("div", { class: "actions", style: "margin-top: 16px" }, saveButton),
+    el("div", { class: "actions", style: "margin-top: 16px" }, saveButton, cancelButton),
     notice,
   );
 
-  // An item cannot be its own ingredient, so it is left out of the picker.
+  // An item cannot be its own ingredient, and an ingredient already in the recipe is
+  // listed above, so both are left out of the picker.
   const picker = createPicker({
     items: allItems.filter((candidate) => !existing || candidate.id !== existing.id),
     buttonText: "Add",
-    isDisabled: (candidate) => rowFor(candidate.id) !== null,
+    isHidden: (candidate) => rowFor(candidate.id) !== null,
     onPick: (candidate) => {
       addIngredientRow(candidate.id, 1);
       picker.refresh();
@@ -115,9 +126,27 @@ function createItemForm({ container, allItems, icons, existing, onSaved }) {
     updateEmptyNote();
   }
 
+  /**
+   * The category as it will be saved: the chosen one, or the typed one when "New category" is chosen.
+   * @returns {string} The category, or an empty string for none.
+   */
+  function chosenCategory() {
+    return category.value === NEW_CATEGORY ? newCategory.value : category.value;
+  }
+
+  /** Shows the box for a new category only when "New category" is chosen. */
+  function toggleNewCategory() {
+    const typing = category.value === NEW_CATEGORY;
+    newCategory.classList.toggle("hidden", !typing);
+    newCategory.required = typing;
+    if (typing) {
+      newCategory.focus();
+    }
+  }
+
   /** Shows the picture chosen in the select box. */
   function previewIcon() {
-    iconPreview.replaceChildren(itemIcon({ icon: icon.value || null, category: category.value }, true));
+    iconPreview.replaceChildren(itemIcon({ icon: icon.value || null, category: chosenCategory() }, true));
   }
 
   /** Shows or hides the recipe fields to match the checkbox. */
@@ -133,7 +162,12 @@ function createItemForm({ container, allItems, icons, existing, onSaved }) {
    */
   function fill(item) {
     name.value = item.name;
+    if (item.category && ![...category.options].some((option) => option.value === item.category)) {
+      category.insertBefore(el("option", { value: item.category }, item.category), category.lastElementChild);
+    }
     category.value = item.category || "";
+    newCategory.value = "";
+    toggleNewCategory();
     description.value = item.description || "";
     icon.value = item.icon || "";
     hasRecipe.checked = item.recipe !== null;
@@ -166,7 +200,7 @@ function createItemForm({ container, allItems, icons, existing, onSaved }) {
       : null;
 
     return {
-      item: { name: name.value, category: category.value, description: description.value, icon: icon.value },
+      item: { name: name.value, category: chosenCategory(), description: description.value, icon: icon.value },
       recipe,
     };
   }
@@ -228,7 +262,12 @@ function createItemForm({ container, allItems, icons, existing, onSaved }) {
 
   hasRecipe.addEventListener("change", toggleRecipe);
   icon.addEventListener("change", previewIcon);
-  category.addEventListener("input", previewIcon);
+  category.addEventListener("change", () => {
+    toggleNewCategory();
+    previewIcon();
+  });
+  newCategory.addEventListener("input", previewIcon);
+  cancelButton.addEventListener("click", onCancel);
   form.addEventListener("submit", save);
 
   if (existing) {
@@ -236,6 +275,7 @@ function createItemForm({ container, allItems, icons, existing, onSaved }) {
   } else {
     updateEmptyNote();
     toggleRecipe();
+    toggleNewCategory();
     previewIcon();
   }
 
