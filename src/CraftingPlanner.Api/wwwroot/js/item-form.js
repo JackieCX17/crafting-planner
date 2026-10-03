@@ -36,7 +36,7 @@ function createItemForm({ container, allItems, icons, existing, onSaved, onCance
 
   // Recipe
   const hasRecipe = el("input", { type: "checkbox", id: "has-recipe" });
-  const outputQuantity = el("input", { id: "output-quantity", type: "number", min: 1, max: 1000, value: 1, required: true });
+  const outputQuantity = el("input", { id: "output-quantity", type: "number", min: 1, max: 1000, value: 1, required: true, title: "How many units one batch makes" });
   const craftSeconds = el("input", { id: "craft-seconds", type: "number", min: 0, max: 86400, value: 0, required: true });
   const rows = el("div", { id: "ingredients" });
   const emptyNote = el("p", { class: "muted" }, "No ingredients yet. Pick some below.");
@@ -45,8 +45,8 @@ function createItemForm({ container, allItems, icons, existing, onSaved, onCance
     "div",
     { id: "recipe-section", class: "recipe-section hidden" },
     el("div", { class: "row", style: "display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px" },
-      el("label", {}, "Makes per batch", outputQuantity),
-      el("label", {}, "Seconds per batch", craftSeconds)),
+      el("label", {}, "Yield", outputQuantity),
+      el("label", {}, "Time per batch (seconds)", craftSeconds)),
     el("div", { class: "muted", style: "font-size: 14px; margin-bottom: 6px" }, "Ingredients, per batch"),
     rows,
     emptyNote,

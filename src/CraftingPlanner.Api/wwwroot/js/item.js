@@ -152,7 +152,7 @@ function treeBranch(node, isRoot) {
   line.appendChild(isRoot ? el("strong", {}, known ? itemIcon(known) : "", node.itemName) : itemLink(node.itemId, node.itemName, known));
 
   if (node.kind === "crafted") {
-    line.appendChild(el("span", { class: "note" }, ` makes ${node.outputQuantity} per batch`));
+    line.appendChild(el("span", { class: "note" }, ` yield ${node.outputQuantity}`));
   } else {
     line.appendChild(el("span", { class: "note" }, " gathered"));
   }
