@@ -84,42 +84,16 @@ async function makePlan() {
   );
   document.getElementById("download").href = `/api/items/${id}/plan/export?quantity=${encodeURIComponent(quantity)}`;
   document.getElementById("item-page").href = `item.html?id=${id}`;
-  document.getElementById("total-time").textContent = formatSeconds(plan.totalSeconds);
-  document.getElementById("step-count").textContent =
-    plan.steps.length === 0
-      ? "Nothing to craft: this is a raw material."
-      : `${plan.steps.length} step${plan.steps.length === 1 ? "" : "s"}, ${formatNumber(plan.steps.reduce((sum, step) => sum + step.crafts, 0))} crafts in all`;
 
-  document.getElementById("raw").replaceChildren(
-    table(
-      [{ text: "Item" }, { text: "Quantity", num: true }],
-      plan.rawMaterials.map((raw) => [itemLink(raw.itemId, raw.itemName, knownItems.get(raw.itemId)), raw.quantity]),
-    ),
-  );
-
-  document.getElementById("steps").replaceChildren(
-    plan.steps.length === 0
-      ? el("p", { class: "muted" }, "No crafting needed.")
-      : table(
-          [
-            { text: "#" },
-            { text: "Craft" },
-            { text: "Needed", num: true },
-            { text: "Crafts", num: true },
-            { text: "Made", num: true },
-            { text: "Left over", num: true },
-            { text: "Time", num: true },
-          ],
-          plan.steps.map((step, index) => [
-            String(index + 1),
-            itemLink(step.itemId, step.itemName, knownItems.get(step.itemId)),
-            step.needed,
-            step.crafts,
-            step.made,
-            step.leftover,
-            formatSeconds(step.seconds),
-          ]),
-        ),
+  drawPlan(
+    {
+      raw: document.getElementById("raw"),
+      steps: document.getElementById("steps"),
+      time: document.getElementById("total-time"),
+      count: document.getElementById("step-count"),
+    },
+    plan,
+    knownItems,
   );
 
   resultPanel.classList.remove("hidden");

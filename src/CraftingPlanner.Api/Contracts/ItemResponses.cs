@@ -45,6 +45,10 @@ public class ItemDetail : ItemSummary
     /// <summary>The items whose recipes use this item as an ingredient.</summary>
     [JsonPropertyOrder(2)]
     public required IReadOnlyList<ItemUse> UsedIn { get; init; }
+
+    /// <summary>The shopping lists this item is on. Deleting the item removes it from them.</summary>
+    [JsonPropertyOrder(3)]
+    public required IReadOnlyList<ListUse> OnLists { get; init; }
 }
 
 /// <summary>A recipe as shown inside the item it makes.</summary>

@@ -103,7 +103,7 @@ public class PlanningEndpointTests(PlannerApp app) : IClassFixture<PlannerApp>
             .SelectMany(path => path.Value!.AsObject().Select(method => (Path: path.Key, Method: method.Key, Operation: method.Value)))
             .ToList();
 
-        Assert.Equal(19, operations.Count);
+        Assert.Equal(28, operations.Count);
         Assert.All(operations, operation => Assert.False(
             string.IsNullOrWhiteSpace((string?)operation.Operation!["summary"]),
             $"{operation.Method.ToUpperInvariant()} {operation.Path} has no summary"));

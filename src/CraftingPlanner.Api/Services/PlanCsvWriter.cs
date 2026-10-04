@@ -1,5 +1,4 @@
 using System.Text;
-using CraftingPlanner.Api.Contracts;
 
 namespace CraftingPlanner.Api.Services;
 
@@ -13,9 +12,9 @@ public static class PlanCsvWriter
     public const string Header = "Type,Item,Quantity,Crafts,Made,Leftover,Seconds";
 
     /// <summary>Writes the plan as CSV text.</summary>
-    /// <param name="plan">The plan.</param>
+    /// <param name="plan">The plan, with item names attached.</param>
     /// <returns>The file's contents, with Windows line endings so every spreadsheet program reads it.</returns>
-    public static string Write(PlanResponse plan)
+    public static string Write(NamedPlan plan)
     {
         var text = new StringBuilder();
         text.Append(Header).Append("\r\n");
@@ -40,6 +39,12 @@ public static class PlanCsvWriter
 
         return text.ToString();
     }
+
+    /// <summary>Turns the CSV text into the bytes of a file, with the marker that tells spreadsheet programs it is UTF-8.</summary>
+    /// <param name="plan">The plan, with item names attached.</param>
+    /// <returns>The file's bytes.</returns>
+    public static byte[] WriteBytes(NamedPlan plan) =>
+        Encoding.UTF8.GetPreamble().Concat(Encoding.UTF8.GetBytes(Write(plan))).ToArray();
 
     /// <summary>
     /// Makes text safe as one CSV field. A field that contains a comma, a quote, or a line

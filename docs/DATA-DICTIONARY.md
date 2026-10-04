@@ -5,9 +5,11 @@ Every table and field in the database, with its type, meaning, and rules. The da
 ## How the tables relate
 
 ```
-Items 1 ──── 0..1 Recipes          an item has at most one recipe
-Recipes 1 ──── 1..* RecipeIngredients   a recipe has one line per ingredient
-Items 1 ──── 0..* RecipeIngredients     an item can be an ingredient of many recipes
+Items 1 ──── 0..1 Recipes                 an item has at most one recipe
+Recipes 1 ──── 1..* RecipeIngredients     a recipe has one line per ingredient
+Items 1 ──── 0..* RecipeIngredients       an item can be an ingredient of many recipes
+ShoppingLists 1 ──── 0..* ShoppingListEntries   a list has one line per item on it
+Items 1 ──── 0..* ShoppingListEntries     an item can be on many lists
 ```
 
 An item is **raw** when no row in Recipes has it as `OutputItemId`, and **crafted** when one does. That is worked out on request and never stored.
@@ -57,6 +59,34 @@ The primary key is (`RecipeId`, `ItemId`), so an item appears at most once in a 
 
 Indexes: `IX_RecipeIngredients_ItemId`, for "what is this item used in?" lookups.
 
+## ShoppingLists
+
+One row per saved list of items to make.
+
+| Field | Type | Null | Rules | Meaning |
+|---|---|---|---|---|
+| `Id` | INTEGER | no | Primary key, assigned by the database | Identifies the list |
+| `Name` | TEXT | no | Unique, ignoring letter case. 1 to 80 characters | Display name |
+| `Description` | TEXT | yes | Up to 500 characters | What the list is for |
+
+Indexes: `IX_ShoppingLists_Name`, unique.
+
+When a list is deleted, its entries are deleted with it (cascade). The items on it are not affected.
+
+## ShoppingListEntries
+
+One row per item on a list: "make this many of that item".
+
+| Field | Type | Null | Rules | Meaning |
+|---|---|---|---|---|
+| `ListId` | INTEGER | no | Part of the primary key. Refers to `ShoppingLists.Id` | The list |
+| `ItemId` | INTEGER | no | Part of the primary key. Refers to `Items.Id` | The item to make |
+| `Quantity` | INTEGER | no | 1 to 1,000,000 (database check constraint) | Units to make |
+
+The primary key is (`ListId`, `ItemId`), so an item appears at most once on a list. The API also limits a list to 50 entries.
+
+When an item is deleted, its entries are deleted with it (cascade): the item is simply taken off every list. This differs from recipes on purpose; a list missing an entry is still a valid list, while a recipe missing an ingredient is wrong data.
+
 ## Rules enforced where
 
 | Rule | Database | API |
@@ -68,6 +98,9 @@ Indexes: `IX_RecipeIngredients_ItemId`, for "what is this item used in?" lookups
 | Cannot delete an item in use | Foreign key, restrict | Checked first, 409 listing the recipes |
 | No looping recipes | Not expressible in SQLite | Loop search on every save, 409 showing the loop |
 | At most 20 ingredients, craft time at most one day | Not enforced | 400 or 409 |
+| List names unique | Unique index | Checked first, 409 |
+| List quantities within range | Check constraint | Checked first, 400 |
+| At most 50 items on a list | Not enforced | 409 |
 
 The database rules are a backstop. The API checks everything first so that callers get a plain explanation instead of a database error.
 
@@ -104,9 +137,27 @@ CREATE TABLE "RecipeIngredients" (
     CONSTRAINT "FK_RecipeIngredients_Recipes_RecipeId" FOREIGN KEY ("RecipeId") REFERENCES "Recipes" ("Id") ON DELETE CASCADE
 );
 
+CREATE TABLE "ShoppingLists" (
+    "Id" INTEGER NOT NULL CONSTRAINT "PK_ShoppingLists" PRIMARY KEY AUTOINCREMENT,
+    "Name" TEXT COLLATE NOCASE NOT NULL,
+    "Description" TEXT NULL
+);
+
+CREATE TABLE "ShoppingListEntries" (
+    "ListId" INTEGER NOT NULL,
+    "ItemId" INTEGER NOT NULL,
+    "Quantity" INTEGER NOT NULL,
+    CONSTRAINT "PK_ShoppingListEntries" PRIMARY KEY ("ListId", "ItemId"),
+    CONSTRAINT "CK_ShoppingListEntries_Quantity" CHECK ("Quantity" BETWEEN 1 AND 1000000),
+    CONSTRAINT "FK_ShoppingListEntries_Items_ItemId" FOREIGN KEY ("ItemId") REFERENCES "Items" ("Id") ON DELETE CASCADE,
+    CONSTRAINT "FK_ShoppingListEntries_ShoppingLists_ListId" FOREIGN KEY ("ListId") REFERENCES "ShoppingLists" ("Id") ON DELETE CASCADE
+);
+
 CREATE UNIQUE INDEX "IX_Items_Name" ON "Items" ("Name");
 CREATE INDEX "IX_RecipeIngredients_ItemId" ON "RecipeIngredients" ("ItemId");
 CREATE UNIQUE INDEX "IX_Recipes_OutputItemId" ON "Recipes" ("OutputItemId");
+CREATE INDEX "IX_ShoppingListEntries_ItemId" ON "ShoppingListEntries" ("ItemId");
+CREATE UNIQUE INDEX "IX_ShoppingLists_Name" ON "ShoppingLists" ("Name");
 ```
 
 ## Sample data

@@ -12,6 +12,7 @@ This guide shows every operation with an example request and the response it ret
 | [Planning](#planning) | What it takes to make a quantity of an item, as JSON or as a file, and the recipe tree |
 | [Summary](#summary) | Totals and highlights across all the data |
 | [Icons](#icons) | The pictures an item can be given |
+| [Lists](#lists) | Saved sets of items to make, planned together |
 | [Rejections](#rejections) | The error format, with an example of each kind |
 
 ## Basics
@@ -123,7 +124,7 @@ Response `200 OK`:
 }
 ```
 
-`recipe` answers "what goes into this?" and `usedIn` answers "what does this go into?". For a raw item, `recipe` is null.
+`recipe` answers "what goes into this?" and `usedIn` answers "what does this go into?". For a raw item, `recipe` is null. The response also has `onLists`: the shopping lists the item is on, each with the quantity asked for.
 
 ### Insert: create an item
 
@@ -609,6 +610,84 @@ Response `200 OK`, in name order:
 
 An item's `icon` field takes one of these names. The pictures come from [game-icons.net](https://game-icons.net) under the Creative Commons Attribution 3.0 license, and `author` is who to credit. Each file is a single-colour SVG that takes the colour of the text around it when used as a mask.
 
+## Lists
+
+A list is a named set of items to make, each with a quantity. Planning a list totals everything on it together.
+
+| Field | Type | Rules |
+|---|---|---|
+| `id` | whole number | Set by the server |
+| `name` | text | Required, unique, 1 to 80 characters |
+| `description` | text or null | Optional note, up to 500 characters |
+| `entryCount` | whole number | How many different items are on the list |
+| `entries[]` | list | The items, in name order: `itemId`, `itemName`, `category`, `icon`, `kind`, `quantity` |
+
+### Create a list
+
+```http
+POST /api/lists
+Content-Type: application/json
+
+{ "name": "Starter gear", "description": "What a new player needs on day one." }
+```
+
+Response `201 Created`, with the header `Location: /api/lists/1`, and the list with an empty `entries`. A name another list already uses is a 409.
+
+`GET /api/lists` pages through the lists in name order, with the same paging fields as items. `PUT /api/lists/1` renames a list or changes its note. `DELETE /api/lists/1` deletes it; the items on it are not affected.
+
+### Put an item on a list, or change its quantity
+
+```http
+PUT /api/lists/1/items/11
+Content-Type: application/json
+
+{ "quantity": 2 }
+```
+
+Response `201 Created` when the item was not on the list, `200 OK` when its quantity was changed:
+
+```json
+{ "itemId": 11, "itemName": "Sword", "category": "Weapon", "icon": "broadsword", "kind": "crafted", "quantity": 2 }
+```
+
+A list holds at most 50 items; the 51st is a 409. `DELETE /api/lists/1/items/11` takes the item off; an item that is not on the list is a 404.
+
+### Plan a list
+
+```http
+GET /api/lists/1/plan
+```
+
+With 2 Swords and 1 Pickaxe on the list, response `200 OK`:
+
+```json
+{
+  "listId": 1,
+  "listName": "Starter gear",
+  "targets": [
+    { "itemId": 12, "itemName": "Pickaxe", "category": "Tool", "icon": "war-pick", "kind": "crafted", "quantity": 1 },
+    { "itemId": 11, "itemName": "Sword", "category": "Weapon", "icon": "broadsword", "kind": "crafted", "quantity": 2 }
+  ],
+  "rawMaterials": [
+    { "itemId": 3, "itemName": "Coal", "quantity": 7 },
+    { "itemId": 2, "itemName": "Iron Ore", "quantity": 14 },
+    { "itemId": 1, "itemName": "Log", "quantity": 1 }
+  ],
+  "steps": [
+    { "itemId": 8, "itemName": "Plank", "needed": 2, "crafts": 1, "made": 2, "leftover": 0, "seconds": 2 },
+    { "itemId": 10, "itemName": "Iron Ingot", "needed": 7, "crafts": 7, "made": 7, "leftover": 0, "seconds": 70 },
+    { "itemId": 9, "itemName": "Stick", "needed": 4, "crafts": 1, "made": 4, "leftover": 0, "seconds": 2 },
+    { "itemId": 12, "itemName": "Pickaxe", "needed": 1, "crafts": 1, "made": 1, "leftover": 0, "seconds": 8 },
+    { "itemId": 11, "itemName": "Sword", "needed": 2, "crafts": 2, "made": 2, "leftover": 0, "seconds": 16 }
+  ],
+  "totalSeconds": 98
+}
+```
+
+The Swords and the Pickaxe share Iron Ingots and Sticks, and both are totalled across the whole list before rounding: 4 Sticks in all means one craft of four, with nothing left over. An item on the list that another item on the list needs appears once, with both shares added together.
+
+`GET /api/lists/1/plan/export` downloads the same plan as `list-starter-gear.csv`. An empty list plans to nothing: empty `rawMaterials` and `steps`, status 200.
+
 ## Rejections
 
 Every rejection uses the Problem Details format, with the content type `application/problem+json`.
@@ -845,3 +924,6 @@ DELETE /api/recipes/13/ingredients/10
 | 409 | The recipe would loop | An ingredient leads back to the item being made |
 | 409 | The recipe needs an ingredient | The last ingredient was removed |
 | 409 | The recipe is full | A 21st ingredient was added |
+| 404 | The list was not found | No list has the id in the address |
+| 404 | The item is not on the list | Taking off an item the list does not have |
+| 409 | The list is full | A 51st item was added to a list |

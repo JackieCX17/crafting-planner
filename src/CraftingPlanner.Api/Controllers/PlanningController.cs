@@ -1,6 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using System.Text;
-using System.Text.RegularExpressions;
 using CraftingPlanner.Api.Contracts;
 using CraftingPlanner.Api.Data;
 using CraftingPlanner.Api.Models;
@@ -17,13 +15,13 @@ namespace CraftingPlanner.Api.Controllers;
 /// <param name="db">The database. Supplied automatically for each request.</param>
 [Route("api/items/{id}")]
 [Tags("Planning")]
-public partial class PlanningController(PlannerDbContext db) : PlannerControllerBase
+public class PlanningController(PlannerDbContext db) : PlannerControllerBase
 {
     /// <summary>The largest quantity a plan can be asked for.</summary>
     public const long MostQuantity = 1_000_000;
 
     /// <summary>The message sent when the quantity is out of range.</summary>
-    private const string QuantityRange = "The quantity must be 1 to 1,000,000.";
+    public const string QuantityRange = "The quantity must be 1 to 1,000,000.";
 
     /// <summary>Works out what it takes to make a quantity of an item.</summary>
     /// <remarks>
@@ -32,6 +30,7 @@ public partial class PlanningController(PlannerDbContext db) : PlannerController
     /// many units are left over when a recipe makes more than is needed.
     /// Demand for an ingredient is totalled across every step that needs it before it is rounded,
     /// so a shared ingredient is never over-produced. For a raw item, the plan is just the item itself.
+    /// To plan several items together, put them on a list and plan the list.
     /// </remarks>
     /// <param name="id">Id of the item to make.</param>
     /// <param name="quantity">How many units to make, from 1 to 1,000,000.</param>
@@ -49,9 +48,21 @@ public partial class PlanningController(PlannerDbContext db) : PlannerController
         [FromQuery, Range(1, MostQuantity, ErrorMessage = QuantityRange)] long quantity = 1,
         CancellationToken cancellationToken = default)
     {
-        var (plan, rejection) = await BuildPlanAsync(id, quantity, cancellationToken);
+        var (target, plan, rejection) = await BuildPlanAsync(id, quantity, cancellationToken);
+        if (rejection is not null)
+        {
+            return rejection;
+        }
 
-        return rejection ?? (ActionResult<PlanResponse>)plan!;
+        return new PlanResponse
+        {
+            ItemId = target!.Id,
+            ItemName = target.Name,
+            Quantity = quantity,
+            RawMaterials = plan!.RawMaterials,
+            Steps = plan.Steps,
+            TotalSeconds = plan.TotalSeconds,
+        };
     }
 
     /// <summary>Downloads a plan as a CSV file that opens in a spreadsheet.</summary>
@@ -77,20 +88,15 @@ public partial class PlanningController(PlannerDbContext db) : PlannerController
         [FromQuery, Range(1, MostQuantity, ErrorMessage = QuantityRange)] long quantity = 1,
         CancellationToken cancellationToken = default)
     {
-        var (plan, rejection) = await BuildPlanAsync(id, quantity, cancellationToken);
+        var (target, plan, rejection) = await BuildPlanAsync(id, quantity, cancellationToken);
         if (rejection is not null)
         {
             return rejection;
         }
 
-        var csv = PlanCsvWriter.Write(plan!);
+        var fileName = $"plan-{FileNames.Slug(target!.Name)}-x{quantity}.csv";
 
-        // The marker at the start tells spreadsheet programs the file is UTF-8,
-        // so item names with accents or other scripts open correctly.
-        var bytes = Encoding.UTF8.GetPreamble().Concat(Encoding.UTF8.GetBytes(csv)).ToArray();
-        var fileName = $"plan-{FileNameSlug().Replace(plan!.ItemName.ToLowerInvariant(), "-").Trim('-')}-x{quantity}.csv";
-
-        return File(bytes, "text/csv; charset=utf-8", fileName);
+        return File(PlanCsvWriter.WriteBytes(plan!), "text/csv; charset=utf-8", fileName);
     }
 
     /// <summary>Shows an item's recipe tree: its ingredients, their ingredients, and so on down to raw materials.</summary>
@@ -129,12 +135,12 @@ public partial class PlanningController(PlannerDbContext db) : PlannerController
         return RecipeTreeBuilder.Build(id, recipes, names);
     }
 
-    /// <summary>Loads what the plan needs, runs the calculation, and attaches names.</summary>
+    /// <summary>Finds the item, runs the calculation, and attaches names.</summary>
     /// <param name="id">Id of the item to make.</param>
     /// <param name="quantity">How many units to make.</param>
     /// <param name="cancellationToken">Signals that the caller has stopped waiting.</param>
-    /// <returns>Either the plan, or the rejection to send back.</returns>
-    private async Task<(PlanResponse? Plan, ActionResult? Rejection)> BuildPlanAsync(
+    /// <returns>The item and its plan, or the rejection to send back.</returns>
+    private async Task<(Item? Target, NamedPlan? Plan, ActionResult? Rejection)> BuildPlanAsync(
         int id,
         long quantity,
         CancellationToken cancellationToken)
@@ -142,66 +148,31 @@ public partial class PlanningController(PlannerDbContext db) : PlannerController
         var target = await db.Items.AsNoTracking().FirstOrDefaultAsync(i => i.Id == id, cancellationToken);
         if (target is null)
         {
-            return (null, NotFoundRejection("item", id));
+            return (null, null, NotFoundRejection("item", id));
         }
 
-        var recipes = await db.LoadPlanRecipesAsync(cancellationToken);
-
-        PlanResult result;
         try
         {
-            result = PlanCalculator.Calculate(id, quantity, recipes);
+            var plan = await db.AssemblePlanAsync([new PlanTarget(id, quantity)], cancellationToken);
+            return (target, plan, null);
         }
         catch (PlanTooLargeException tooLarge)
         {
-            return (null, await TooLargeRejectionAsync(target, quantity, tooLarge, cancellationToken));
+            return (target, null, await TooLargeRejectionAsync(db, this, $"{quantity:N0} of \"{target.Name}\"", tooLarge, cancellationToken));
         }
-
-        var names = await db.LoadNamesAsync(
-            result.RawMaterials.Select(raw => raw.ItemId).Concat(result.Steps.Select(step => step.ItemId)),
-            cancellationToken);
-
-        var plan = new PlanResponse
-        {
-            ItemId = target.Id,
-            ItemName = target.Name,
-            Quantity = quantity,
-            RawMaterials = result.RawMaterials
-                .Select(raw => new RawMaterialLine
-                {
-                    ItemId = raw.ItemId,
-                    ItemName = names[raw.ItemId],
-                    Quantity = raw.Quantity,
-                })
-                .OrderBy(line => line.ItemName)
-                .ToList(),
-            Steps = result.Steps
-                .Select(step => new PlanStepLine
-                {
-                    ItemId = step.ItemId,
-                    ItemName = names[step.ItemId],
-                    Needed = step.Needed,
-                    Crafts = step.Crafts,
-                    Made = step.Made,
-                    Leftover = step.Leftover,
-                    Seconds = step.Seconds,
-                })
-                .ToList(),
-            TotalSeconds = result.TotalSeconds,
-        };
-
-        return (plan, null);
     }
 
     /// <summary>Builds the 400 rejection for a plan whose totals do not fit in 64 bits.</summary>
-    /// <param name="target">The item being made.</param>
-    /// <param name="quantity">How many were asked for.</param>
+    /// <param name="db">The database, to look up the item's name.</param>
+    /// <param name="controller">The controller answering, which builds the rejection.</param>
+    /// <param name="what">What was asked for, such as "3 of "Tool Kit"" or "the list "Starter gear"".</param>
     /// <param name="tooLarge">The error from the calculation.</param>
     /// <param name="cancellationToken">Signals that the caller has stopped waiting.</param>
     /// <returns>The response to send back.</returns>
-    private async Task<ObjectResult> TooLargeRejectionAsync(
-        Item target,
-        long quantity,
+    public static async Task<ObjectResult> TooLargeRejectionAsync(
+        PlannerDbContext db,
+        PlannerControllerBase controller,
+        string what,
         PlanTooLargeException tooLarge,
         CancellationToken cancellationToken)
     {
@@ -210,16 +181,8 @@ public partial class PlanningController(PlannerDbContext db) : PlannerController
             .Select(i => i.Name)
             .FirstOrDefaultAsync(cancellationToken);
 
-        return Rejection(
-            StatusCodes.Status400BadRequest,
-            "The plan is too large",
-            $"Making {quantity:N0} of \"{target.Name}\" needs more \"{itemName}\" than can be counted. Try a smaller quantity.",
-            extraName: "itemId",
-            extraValue: tooLarge.ItemId);
+        return controller.TooLarge(
+            $"Making {what} needs more \"{itemName}\" than can be counted. Try a smaller quantity.",
+            tooLarge.ItemId);
     }
-
-    /// <summary>Matches every run of characters that cannot go in a file name.</summary>
-    /// <returns>The pattern.</returns>
-    [GeneratedRegex("[^a-z0-9]+")]
-    private static partial Regex FileNameSlug();
 }
