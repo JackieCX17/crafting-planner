@@ -1,0 +1,16 @@
+# Render blueprint: describes the hosted demo so it can be created with one click.
+# https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: crafting-planner
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/about
+    envVars:
+      # Demo mode: reset to the sample data on every start, rate-limit the API,
+      # trust the host's proxy for client addresses, and show a banner saying so.
+      - key: DemoMode
+        value: "true"
+      - key: ASPNETCORE_HTTP_PORTS
+        value: "10000"
