@@ -19,6 +19,12 @@ public sealed class PlannerApp : WebApplicationFactory<Program>
         Path.Combine(Path.GetTempPath(), $"craftingplanner-test-{Guid.NewGuid():N}.db");
 
     /// <summary>
+    /// Whether to start the app with the public demo's guard rails on. Set it when creating
+    /// the instance; the app is only started on the first request for a client.
+    /// </summary>
+    public bool DemoMode { get; init; }
+
+    /// <summary>
     /// The JSON rules the API uses, so responses read back into the API's own response classes.
     /// </summary>
     public static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web)
@@ -31,6 +37,7 @@ public sealed class PlannerApp : WebApplicationFactory<Program>
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseSetting("DatabaseFile", databaseFile);
+        builder.UseSetting("DemoMode", DemoMode ? "true" : "false");
     }
 
     /// <summary>Stops the app and deletes its database file.</summary>

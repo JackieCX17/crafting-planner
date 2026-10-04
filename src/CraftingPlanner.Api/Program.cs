@@ -34,6 +34,13 @@ builder.Services.AddDbContext<PlannerDbContext>(options =>
 // The pictures an item can be given: read from the website's icons folder once.
 builder.Services.AddSingleton<IconCatalog>();
 
+// The public demo gets extra guard rails; a local run does not. See Services/DemoMode.cs.
+var demoMode = DemoMode.IsOn(builder.Configuration);
+if (demoMode)
+{
+    DemoMode.AddServices(builder);
+}
+
 // The API description that the interactive page is drawn from.
 builder.Services.AddOpenApi(options =>
     options.AddDocumentTransformer((document, _, _) =>
@@ -57,6 +64,11 @@ var app = builder.Build();
 // sure the file still matches the code, and stop with a plain message if it does not.
 using (var scope = app.Services.CreateScope())
 {
+    if (demoMode)
+    {
+        DemoMode.ResetDatabase(databaseFile, app.Logger);
+    }
+
     var db = scope.ServiceProvider.GetRequiredService<PlannerDbContext>();
     var created = db.Database.EnsureCreated();
 
@@ -81,6 +93,11 @@ using (var scope = app.Services.CreateScope())
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 
+if (demoMode)
+{
+    DemoMode.Use(app);
+}
+
 // The interactive API page is part of what this project delivers,
 // so it is switched on everywhere, not only during development.
 app.MapOpenApi();
@@ -95,7 +112,12 @@ app.UseSwaggerUI(options =>
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
-app.MapControllers();
+// On the demo, the API endpoints are rate-limited; the pages and pictures are not.
+var endpoints = app.MapControllers();
+if (demoMode)
+{
+    endpoints.RequireRateLimiting(DemoMode.ApiPolicy);
+}
 
 app.Run();
 
