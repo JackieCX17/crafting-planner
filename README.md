@@ -8,6 +8,12 @@ The crafting theme is inspired by games such as Minecraft. The same logic is use
 
 ![The Plan page: raw materials to gather and the crafting steps in order for three Tool Kits](docs/images/plan.png)
 
+## Live demo
+
+A public copy runs on Render's free tier. The first visit after a quiet spell takes up to a minute while the service wakes up. Anyone can edit the data there, and it resets to the sample set whenever the service restarts. The link is added here once the service is up.
+
+Running it yourself, below, is the primary way to use the project.
+
 ## Status
 
 | Stage | Delivers | State |
@@ -111,9 +117,14 @@ Every public class, function, and field in the C# code has a structured comment,
 3. The planning calculation was [prototyped in Python](prototype/README.md), then translated to C#, with tests holding both to the same answers.
 4. Decisions made during the build were added to the design document with their reasons, including one correction to the original plan.
 
+## Hosting
+
+`Dockerfile` builds the app into a small image, and `render.yaml` describes the hosted demo for Render. The hosted copy runs with the `DemoMode` setting on, which resets the data on every start, rate-limits the API, and shows a notice on every page. A local run never has it. The design document's "Hosting and the public demo" section lists the risks of a public demo and what demo mode does about each.
+
 ## Layout
 
 ```
+Dockerfile, render.yaml      How the public demo is built and hosted
 docs/                        Design document, API guide, screenshots
 prototype/                   The planning calculation in Python, written before the C# version
 tests/CraftingPlanner.Tests/ Automated tests
