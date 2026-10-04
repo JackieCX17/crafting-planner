@@ -22,6 +22,12 @@ public class Item
     /// <summary>Optional group the item belongs to, such as "Tool". Up to 40 characters.</summary>
     public string? Category { get; set; }
 
+    /// <summary>
+    /// Optional name of the picture shown for the item, such as "broadsword". It names one of
+    /// the icon files the website ships with. Up to 40 characters.
+    /// </summary>
+    public string? Icon { get; set; }
+
     /// <summary>The recipe that makes this item, or null when the item is raw.</summary>
     public Recipe? Recipe { get; set; }
 

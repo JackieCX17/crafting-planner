@@ -6,13 +6,20 @@ const quantityInput = document.getElementById("quantity");
 const planNotice = document.getElementById("notice");
 const resultPanel = document.getElementById("result");
 
+/** Every item by id, for icons in the plan tables. */
+const knownItems = new Map();
+
 /**
  * Fills the item list, then makes a plan straight away if the address names an item,
  * as links from the item page do.
  */
 async function setUpPlanPage() {
   try {
-    fillItemSelect(itemSelect, await loadAllItems(), queryParam("id"));
+    const items = await loadAllItems();
+    for (const item of items) {
+      knownItems.set(item.id, item);
+    }
+    fillItemSelect(itemSelect, items, queryParam("id"));
   } catch (error) {
     showProblem(planNotice, error);
     return;
@@ -48,7 +55,11 @@ async function makePlan() {
   // Keep the address in step with the plan, so it can be bookmarked or shared.
   history.replaceState(null, "", `plan.html?id=${id}&quantity=${encodeURIComponent(quantity)}`);
 
-  document.getElementById("result-title").textContent = `${formatNumber(plan.quantity)} × ${plan.itemName}`;
+  const target = knownItems.get(Number(id));
+  document.getElementById("result-title").replaceChildren(
+    target ? itemIcon(target, true) : "",
+    `${formatNumber(plan.quantity)} × ${plan.itemName}`,
+  );
   document.getElementById("download").href = `/api/items/${id}/plan/export?quantity=${encodeURIComponent(quantity)}`;
   document.getElementById("item-page").href = `item.html?id=${id}`;
   document.getElementById("total-time").textContent = formatSeconds(plan.totalSeconds);
@@ -60,7 +71,7 @@ async function makePlan() {
   document.getElementById("raw").replaceChildren(
     table(
       [{ text: "Item" }, { text: "Quantity", num: true }],
-      plan.rawMaterials.map((raw) => [itemLink(raw.itemId, raw.itemName), raw.quantity]),
+      plan.rawMaterials.map((raw) => [itemLink(raw.itemId, raw.itemName, knownItems.get(raw.itemId)), raw.quantity]),
     ),
   );
 
@@ -79,7 +90,7 @@ async function makePlan() {
           ],
           plan.steps.map((step, index) => [
             String(index + 1),
-            itemLink(step.itemId, step.itemName),
+            itemLink(step.itemId, step.itemName, knownItems.get(step.itemId)),
             step.needed,
             step.crafts,
             step.made,

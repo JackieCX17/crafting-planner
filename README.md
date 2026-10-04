@@ -36,7 +36,7 @@ Then open <http://localhost:5080>.
 | <http://localhost:5080> | The website: plan an item, manage items and recipes |
 | <http://localhost:5080/swagger> | The interactive API page: try every endpoint from the browser |
 
-To start again with fresh sample data, stop the app and delete `src/CraftingPlanner.Api/craftingplanner.db`.
+To start again with fresh sample data, stop the app and delete `src/CraftingPlanner.Api/craftingplanner.db`. The app asks for the same if the file was made by an older version with fewer columns.
 
 ## Run the tests
 
@@ -63,6 +63,8 @@ Plain HTML, CSS, and JavaScript, served by the same app. Every page reaches the 
 | Item | Edit an item's details, create or edit its recipe, see what it is used in, and view its recipe tree |
 
 Rejections from the API appear on the page in plain words. Try giving Planks a recipe that uses Sticks, and the page explains the loop.
+
+Item pictures are by Lorc, Delapouite, and Faithtoken from [game-icons.net](https://game-icons.net), used under the [Creative Commons Attribution 3.0](https://creativecommons.org/licenses/by/3.0/) license. See `src/CraftingPlanner.Api/wwwroot/icons/LICENSE.md`.
 
 ![The Item page for the Sword: details, the recipe, what it is used in, and the recipe tree](docs/images/item.png)
 

@@ -173,6 +173,42 @@ public class ItemChangeTests(PlannerApp app) : IClassFixture<PlannerApp>
         Assert.Null(replaced?.Category);
     }
 
+    /// <summary>An item can be given one of the shipped icons, and the name is stored as sent.</summary>
+    [Fact]
+    public async Task Create_AcceptsAShippedIcon()
+    {
+        var response = await client.PostAsJsonAsync("/api/items", new { name = "Gold Ingot", icon = "metal-bar" });
+        var created = await response.Content.ReadFromJsonAsync<ItemDetail>(Json);
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        Assert.Equal("metal-bar", created?.Icon);
+    }
+
+    /// <summary>An icon the website does not ship with is refused against the icon field.</summary>
+    [Fact]
+    public async Task Create_RefusesAnUnknownIcon()
+    {
+        var response = await client.PostAsJsonAsync("/api/items", new { name = "Mystery Box", icon = "no-such-icon" });
+        var body = await BodyAsync(response);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.NotNull(body["errors"]!["icon"]);
+    }
+
+    /// <summary>PATCH with an empty icon clears it.</summary>
+    [Fact]
+    public async Task Patch_ClearsTheIcon()
+    {
+        var created = await (await client.PostAsJsonAsync("/api/items", new { name = "Lead Ingot", icon = "metal-bar" }))
+            .Content.ReadFromJsonAsync<ItemDetail>(Json);
+
+        var response = await client.PatchAsJsonAsync($"/api/items/{created!.Id}", new { icon = "" });
+        var changed = await response.Content.ReadFromJsonAsync<ItemDetail>(Json);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Null(changed?.Icon);
+    }
+
     /// <summary>Deleting an unused item returns 204, and the item is then gone.</summary>
     [Fact]
     public async Task Delete_RemovesAnUnusedItem()

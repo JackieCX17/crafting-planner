@@ -21,6 +21,10 @@ public class ItemSummary
     /// <example>Weapon</example>
     public string? Category { get; init; }
 
+    /// <summary>Name of the item's picture, when one was given. The file is at <c>/icons/{icon}.svg</c>.</summary>
+    /// <example>broadsword</example>
+    public string? Icon { get; init; }
+
     /// <summary>Raw when the item has no recipe, crafted when it has one.</summary>
     public required ItemKind Kind { get; init; }
 }
