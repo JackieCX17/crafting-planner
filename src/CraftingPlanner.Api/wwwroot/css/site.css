@@ -327,7 +327,7 @@ tr.total td {
   opacity: 0.45;
 }
 
-/* Tags for raw and crafted */
+/* The small tag that marks an item as having a recipe */
 
 .tag {
   display: inline-block;
@@ -339,14 +339,9 @@ tr.total td {
   letter-spacing: 0.04em;
 }
 
-.tag.crafted {
+.tag.recipe {
   background: var(--accent-soft);
   color: var(--accent);
-}
-
-.tag.raw {
-  background: var(--raw-soft);
-  color: var(--raw);
 }
 
 /* Recipe tree */
@@ -479,6 +474,27 @@ tr.total td {
 
 .hidden {
   display: none !important;
+}
+
+label.checkbox {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  color: var(--text);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+label.checkbox input {
+  width: 18px;
+  height: 18px;
+}
+
+.recipe-section {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
 }
 
 .ingredient-row {

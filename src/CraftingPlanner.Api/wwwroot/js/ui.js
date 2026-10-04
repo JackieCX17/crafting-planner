@@ -100,13 +100,25 @@ function itemLink(id, name, item = null) {
 }
 
 /**
- * Builds the raw or crafted tag.
- * @param {string} kind "raw" or "crafted".
- * @returns {HTMLElement} The tag.
+ * Builds the small "recipe" tag for an item that has a recipe, and nothing for one that
+ * does not. The API calls these kinds "crafted" and "raw"; on the page, the plain fact
+ * that there is a recipe reads better.
+ * @param {string} kind "raw" or "crafted", as the API reports it.
+ * @returns {Node} The tag, or an empty text node.
  */
-function kindTag(kind) {
-  return el("span", { class: `tag ${kind}` }, kind);
+function recipeTag(kind) {
+  return kind === "crafted" ? el("span", { class: "tag recipe", title: "This item has a recipe" }, "recipe") : document.createTextNode("");
 }
+
+/**
+ * The categories in use, in alphabetical order.
+ * @param {Array<object>} items Every item.
+ * @returns {Array<string>} The distinct category names.
+ */
+function categoriesOf(items) {
+  return [...new Set(items.map((item) => item.category).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+}
+
 
 /**
  * Builds a table.

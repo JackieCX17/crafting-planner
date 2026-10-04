@@ -49,7 +49,7 @@ async function setUpPlanPage() {
  */
 function choose(item) {
   chosenItem = item;
-  document.getElementById("chosen").replaceChildren(itemIcon(item), item.name, " ", kindTag(item.kind));
+  document.getElementById("chosen").replaceChildren(itemIcon(item), item.name, " ", recipeTag(item.kind));
   document.getElementById("chosen").classList.remove("muted");
   makePlanButton.disabled = false;
   makePlan();

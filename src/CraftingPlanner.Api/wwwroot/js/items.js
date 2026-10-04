@@ -1,9 +1,31 @@
-/* The Items page: a filterable, paged list, a form to add an item, and delete buttons. */
+/* The Items page: a filterable, paged list. Adding happens on the New item page, and
+   editing and deleting on the item's own page, where what it is used in can be seen. */
 
 const listNotice = document.getElementById("list-notice");
-const addNotice = document.getElementById("add-notice");
 const pageSize = 20;
 let currentPage = 1;
+
+/**
+ * Fills the category dropdown from the items that exist. The categories are worked out
+ * in the browser from the full item list, which suits hundreds of items; at thousands,
+ * the API would be asked for the distinct categories instead.
+ */
+async function setUpCategories() {
+  let items;
+  try {
+    items = await loadAllItems();
+  } catch {
+    return; // The list below will report the problem.
+  }
+
+  const select = document.getElementById("category");
+  const chosen = select.value;
+  select.replaceChildren(
+    el("option", { value: "" }, "Any"),
+    ...categoriesOf(items).map((name) => el("option", { value: name }, name)),
+  );
+  select.value = chosen;
+}
 
 /**
  * Builds the address of the list request from the filter form and the current page.
@@ -12,7 +34,7 @@ let currentPage = 1;
 function listAddress() {
   const params = new URLSearchParams({ page: currentPage, pageSize });
   const search = document.getElementById("search").value.trim();
-  const category = document.getElementById("category").value.trim();
+  const category = document.getElementById("category").value;
   const kind = document.getElementById("kind").value;
   const sort = document.getElementById("sort").value;
 
@@ -49,13 +71,11 @@ async function loadItems() {
   } else {
     list.replaceChildren(
       table(
-        [{ text: "Name" }, { text: "Category" }, { text: "Kind" }, { text: "Description" }, { text: "" }],
+        [{ text: "Name" }, { text: "Category" }, { text: "Description" }],
         result.items.map((item) => [
-          itemLink(item.id, item.name, item),
+          el("span", {}, itemLink(item.id, item.name, item), " ", recipeTag(item.kind)),
           item.category || "",
-          kindTag(item.kind),
           item.description || "",
-          deleteButton(item),
         ]),
       ),
     );
@@ -69,57 +89,31 @@ async function loadItems() {
   document.getElementById("next").disabled = result.page >= result.totalPages;
 }
 
-/**
- * Builds the delete button for one row. Deleting asks first, and the API refuses
- * when other recipes still use the item.
- * @param {object} item The item.
- * @returns {HTMLElement} The button.
- */
-function deleteButton(item) {
-  const button = el("button", { class: "btn danger small", type: "button" }, "Delete");
-  button.addEventListener("click", async () => {
-    if (!window.confirm(`Delete "${item.name}"? Its own recipe is deleted with it.`)) {
-      return;
-    }
-    try {
-      await api.delete(`/api/items/${item.id}`);
-      showSuccess(listNotice, `"${item.name}" was deleted.`);
-      await loadItems();
-    } catch (error) {
-      showProblem(listNotice, error);
-    }
-  });
-  return button;
-}
+/** The timer that waits for typing to pause before searching. */
+let searchTimer = null;
 
 /**
- * Creates an item from the add form, then opens its page.
- * @param {Event} event The form's submit event.
+ * Reloads the list from the first page, after a short pause when called from typing,
+ * so the API is not asked on every keystroke.
+ * @param {number} delay How long to wait, in milliseconds. 0 reloads at once.
  */
-async function addItem(event) {
-  event.preventDefault();
-  clearNotice(addNotice);
-
-  const request = {
-    name: document.getElementById("add-name").value,
-    category: document.getElementById("add-category").value,
-    description: document.getElementById("add-description").value,
-  };
-
-  try {
-    const item = await api.post("/api/items", request);
-    window.location.href = `item.html?id=${item.id}`;
-  } catch (error) {
-    showProblem(addNotice, error);
-  }
+function reloadFromFirstPage(delay) {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => {
+    currentPage = 1;
+    loadItems();
+  }, delay);
 }
 
-document.getElementById("add-form").addEventListener("submit", addItem);
+document.getElementById("search").addEventListener("input", () => reloadFromFirstPage(250));
+for (const id of ["category", "kind", "sort"]) {
+  document.getElementById(id).addEventListener("change", () => reloadFromFirstPage(0));
+}
 
+// Enter in the search box searches at once instead of reloading the page.
 document.getElementById("filter-form").addEventListener("submit", (event) => {
   event.preventDefault();
-  currentPage = 1;
-  loadItems();
+  reloadFromFirstPage(0);
 });
 
 document.getElementById("prev").addEventListener("click", () => {
@@ -132,4 +126,5 @@ document.getElementById("next").addEventListener("click", () => {
   loadItems();
 });
 
+setUpCategories();
 loadItems();
