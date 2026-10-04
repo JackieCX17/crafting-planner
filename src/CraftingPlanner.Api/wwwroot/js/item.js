@@ -44,6 +44,12 @@ async function loadItem() {
   await drawTree();
 
   document.getElementById("content").classList.remove("hidden");
+
+  // item.html?id=5&edit=recipe opens the recipe editor straight away.
+  if (queryParam("edit") === "recipe") {
+    openEditor();
+    history.replaceState(null, "", `item.html?id=${item.id}`);
+  }
 }
 
 /** The icons the website ships with, loaded once. */
@@ -133,6 +139,9 @@ function drawRecipe() {
   actions.replaceChildren(edit, remove);
 }
 
+/** The picker used to add ingredients. Built once the editor first opens. */
+let ingredientPicker = null;
+
 /**
  * Shows the recipe editor, filled from the current recipe or empty for a new one.
  */
@@ -142,32 +151,71 @@ function openEditor() {
   document.getElementById("craft-seconds").value = item.recipe ? item.recipe.craftSeconds : 0;
 
   ingredientRows.replaceChildren();
-  if (item.recipe) {
-    for (const line of item.recipe.ingredients) {
-      addIngredientRow(line.itemId, line.quantity);
-    }
-  } else {
-    addIngredientRow();
+  for (const line of item.recipe ? item.recipe.ingredients : []) {
+    addIngredientRow(line.itemId, line.quantity);
   }
 
+  // An item cannot be its own ingredient, so it is left out of the picker.
+  const candidates = allItems.filter((candidate) => candidate.id !== item.id);
+  if (ingredientPicker === null) {
+    ingredientPicker = createPicker({
+      items: candidates,
+      buttonText: "Add",
+      isDisabled: (candidate) => rowFor(candidate.id) !== null,
+      onPick: (candidate) => {
+        addIngredientRow(candidate.id, 1);
+        ingredientPicker.refresh();
+        rowFor(candidate.id).querySelector("input").focus();
+      },
+    });
+    document.getElementById("ingredient-picker").replaceChildren(ingredientPicker.element);
+  } else {
+    ingredientPicker.refresh(candidates);
+  }
+
+  updateEmptyNote();
   recipeForm.classList.remove("hidden");
 }
 
 /**
- * Adds one ingredient row to the editor: an item to pick, a quantity, and a remove button.
- * @param {number|null} [selectedId] The item to select, or null for the first item.
- * @param {number} [quantity] The quantity to show.
+ * Finds the editor row for an item.
+ * @param {number} id The item's id.
+ * @returns {HTMLElement|null} The row, or null when the item is not in the recipe.
  */
-function addIngredientRow(selectedId = null, quantity = 1) {
-  const select = el("select", { required: true });
-  // An item cannot be its own ingredient, so it is left out of the list.
-  fillItemSelect(select, allItems.filter((candidate) => candidate.id !== item.id), selectedId);
+function rowFor(id) {
+  return ingredientRows.querySelector(`.ingredient-row[data-item-id="${id}"]`);
+}
 
-  const input = el("input", { type: "number", min: 1, max: 1000, value: quantity, required: true });
+/**
+ * Shows or hides the "no ingredients yet" note.
+ */
+function updateEmptyNote() {
+  document.getElementById("no-ingredients").classList.toggle("hidden", ingredientRows.children.length > 0);
+}
+
+/**
+ * Adds one ingredient row to the editor: the item's icon and name, a quantity, and a remove button.
+ * @param {number} id The ingredient item's id.
+ * @param {number} quantity The quantity to show.
+ */
+function addIngredientRow(id, quantity) {
+  const ingredient = lookupItem(id) || { id, name: `Item ${id}`, category: null, icon: null };
+  const input = el("input", { type: "number", min: 1, max: 1000, value: quantity, required: true, "aria-label": `Quantity of ${ingredient.name}` });
   const remove = el("button", { class: "btn danger small", type: "button" }, "Remove");
-  const row = el("div", { class: "ingredient-row" }, select, input, remove);
-  remove.addEventListener("click", () => row.remove());
+  const row = el(
+    "div",
+    { class: "ingredient-row", "data-item-id": id },
+    el("span", { class: "ingredient-name" }, itemIcon(ingredient), ingredient.name),
+    input,
+    remove,
+  );
+  remove.addEventListener("click", () => {
+    row.remove();
+    updateEmptyNote();
+    ingredientPicker?.refresh();
+  });
   ingredientRows.appendChild(row);
+  updateEmptyNote();
 }
 
 /**
@@ -176,7 +224,7 @@ function addIngredientRow(selectedId = null, quantity = 1) {
  */
 function readEditor() {
   const ingredients = [...ingredientRows.querySelectorAll(".ingredient-row")].map((row) => ({
-    itemId: Number(row.querySelector("select").value),
+    itemId: Number(row.dataset.itemId),
     quantity: Number(row.querySelector("input").value),
   }));
 
@@ -323,7 +371,6 @@ document.getElementById("icon").addEventListener("change", previewIcon);
 document.getElementById("category").addEventListener("input", previewIcon);
 document.getElementById("delete-item").addEventListener("click", deleteItem);
 recipeForm.addEventListener("submit", saveRecipe);
-document.getElementById("add-ingredient").addEventListener("click", () => addIngredientRow());
 document.getElementById("cancel-recipe").addEventListener("click", () => drawRecipe());
 
 if (Number.isInteger(itemId) && itemId > 0) {

@@ -147,19 +147,6 @@ async function loadAllItems() {
 }
 
 /**
- * Fills a select box with items.
- * @param {HTMLSelectElement} select The select box.
- * @param {Array<object>} items The items to list.
- * @param {number|string|null} [selectedId] The id to select, if any.
- */
-function fillItemSelect(select, items, selectedId = null) {
-  select.replaceChildren(...items.map((item) => el("option", { value: item.id }, item.name)));
-  if (selectedId !== null) {
-    select.value = String(selectedId);
-  }
-}
-
-/**
  * Marks the current page's link in the navigation.
  */
 function markCurrentPage() {

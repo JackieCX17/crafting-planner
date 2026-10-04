@@ -379,6 +379,83 @@ tr.total td {
   font-size: 13px;
 }
 
+/* The item picker: search box, category chips, and a list of matches */
+
+.picker input[type="search"] {
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.chip {
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+
+.chip:hover {
+  color: var(--text);
+}
+
+.chip.on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+
+.picker-results {
+  max-height: 320px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.picker-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.picker-row:last-child {
+  border-bottom: none;
+}
+
+.picker-name {
+  flex: 1 1 auto;
+}
+
+.picker-category {
+  font-size: 13px;
+  flex: 0 0 auto;
+}
+
+.picker-results p {
+  margin: 0;
+  padding: 10px;
+}
+
+.chosen {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
 /* Small helpers */
 
 .muted {
@@ -407,12 +484,12 @@ tr.total td {
 .ingredient-row {
   display: flex;
   gap: 8px;
-  align-items: flex-end;
+  align-items: center;
   margin-bottom: 8px;
   flex-wrap: wrap;
 }
 
-.ingredient-row select {
+.ingredient-row .ingredient-name {
   flex: 1 1 200px;
 }
 
