@@ -170,7 +170,7 @@ public class RecipeEndpointTests(PlannerApp app) : IClassFixture<PlannerApp>
     /// <returns>The new item's id.</returns>
     private async Task<int> NewItemAsync(string name)
     {
-        var created = await (await client.PostAsJsonAsync("/api/items", new { name })).Content.ReadFromJsonAsync<ItemDetail>(Json);
-        return created!.Id;
+        var created = await ReadAsync<ItemDetail>(await client.PostAsJsonAsync("/api/items", new { name }));
+        return created.Id;
     }
 }

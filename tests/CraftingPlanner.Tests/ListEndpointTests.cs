@@ -142,7 +142,7 @@ public class ListEndpointTests(PlannerApp app) : IClassFixture<PlannerApp>
     public async Task DeletingAnItem_RemovesItFromLists()
     {
         var list = await NewListAsync("Soon to shrink");
-        var created = await (await client.PostAsJsonAsync("/api/items", new { name = "Temporary Gadget" })).Content.ReadFromJsonAsync<ItemDetail>(Json);
+        var created = await ReadAsync<ItemDetail>(await client.PostAsJsonAsync("/api/items", new { name = "Temporary Gadget" }));
         await client.PutAsJsonAsync($"/api/lists/{list}/items/{created!.Id}", new { quantity = 4 });
 
         var itemBefore = await client.GetFromJsonAsync<ItemDetail>($"/api/items/{created.Id}", Json);
@@ -179,7 +179,7 @@ public class ListEndpointTests(PlannerApp app) : IClassFixture<PlannerApp>
     /// <returns>The new list's id.</returns>
     private async Task<int> NewListAsync(string name)
     {
-        var created = await (await client.PostAsJsonAsync("/api/lists", new { name })).Content.ReadFromJsonAsync<ListDetail>(Json);
-        return created!.Id;
+        var created = await ReadAsync<ListDetail>(await client.PostAsJsonAsync("/api/lists", new { name }));
+        return created.Id;
     }
 }
