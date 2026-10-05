@@ -47,8 +47,11 @@ public sealed class PlannerApp : WebApplicationFactory<Program>
         base.Dispose(disposing);
 
         // SQLite keeps connections open in a pool for reuse. They have to be closed
-        // before the file can be deleted.
-        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+        // before the file can be deleted. Only this database's pool is cleared: clearing
+        // every pool in the process would cut off connections that other test classes,
+        // running at the same time on their own databases, are in the middle of using.
+        Microsoft.Data.Sqlite.SqliteConnection.ClearPool(
+            new Microsoft.Data.Sqlite.SqliteConnection($"Data Source={databaseFile}"));
 
         foreach (var suffix in new[] { "", "-shm", "-wal" })
         {
@@ -69,6 +72,28 @@ public sealed class PlannerApp : WebApplicationFactory<Program>
         var page = await client.GetFromJsonAsync<JsonNode>($"/api/items?search={Uri.EscapeDataString(name)}&pageSize=100");
         var match = page!["items"]!.AsArray().Single(item => (string)item!["name"]! == name);
         return (int)match!["id"]!;
+    }
+
+    /// <summary>
+    /// Reads a response body into one of the API's response classes. When the body is not that
+    /// shape, for example because the request was rejected, the failure says what came back.
+    /// </summary>
+    /// <typeparam name="T">The response class expected.</typeparam>
+    /// <param name="response">The response.</param>
+    /// <returns>The body.</returns>
+    public static async Task<T> ReadAsync<T>(HttpResponseMessage response)
+    {
+        var text = await response.Content.ReadAsStringAsync();
+        try
+        {
+            return JsonSerializer.Deserialize<T>(text, Json)!;
+        }
+        catch (JsonException error)
+        {
+            throw new Xunit.Sdk.XunitException(
+                $"Expected a {typeof(T).Name} but the response was {(int)response.StatusCode} {response.StatusCode}: {text}",
+                error);
+        }
     }
 
     /// <summary>Reads a response body as a JSON tree, for checks on rejections and loose shapes.</summary>

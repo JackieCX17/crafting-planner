@@ -199,8 +199,7 @@ public class ItemChangeTests(PlannerApp app) : IClassFixture<PlannerApp>
     [Fact]
     public async Task Patch_ClearsTheIcon()
     {
-        var created = await (await client.PostAsJsonAsync("/api/items", new { name = "Lead Ingot", icon = "metal-bar" }))
-            .Content.ReadFromJsonAsync<ItemDetail>(Json);
+        var created = await ReadAsync<ItemDetail>(await client.PostAsJsonAsync("/api/items", new { name = "Lead Ingot", icon = "metal-bar" }));
 
         var response = await client.PatchAsJsonAsync($"/api/items/{created!.Id}", new { icon = "" });
         var changed = await response.Content.ReadFromJsonAsync<ItemDetail>(Json);
