@@ -10,7 +10,9 @@ The crafting theme is inspired by games such as Minecraft. The same logic is use
 
 ## Live demo
 
-A public copy runs on Render's free tier. The first visit after a quiet spell takes up to a minute while the service wakes up. Anyone can edit the data there, and it resets to the sample set whenever the service restarts. The link is added here once the service is up.
+**<https://crafting-planner.onrender.com>**
+
+A public copy on Render's free tier. The first visit after a quiet spell takes up to a minute while the service wakes up. Anyone can edit the data there, and it resets to the sample set whenever the service restarts. The interactive API page is at [/swagger](https://crafting-planner.onrender.com/swagger).
 
 Running it yourself, below, is the primary way to use the project.
 
