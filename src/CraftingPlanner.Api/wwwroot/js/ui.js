@@ -170,4 +170,36 @@ function markCurrentPage() {
   }
 }
 
-document.addEventListener("DOMContentLoaded", markCurrentPage);
+/**
+ * On the public demo, shows a notice under the header saying that anyone can edit the data
+ * and that it resets. A local run never shows it.
+ */
+async function showDemoNotice() {
+  let about;
+  try {
+    about = await api.get("/api/about");
+  } catch {
+    return; // The page's own notice will report a problem with the server.
+  }
+  if (!about.demoMode) {
+    return;
+  }
+  const header = document.querySelector(".site-header");
+  header.insertAdjacentElement(
+    "afterend",
+    el(
+      "div",
+      { class: "demo-notice" },
+      el("div", { class: "inner" },
+        el("strong", {}, "Public demo. "),
+        "Anyone can edit this data, and it resets to the sample set whenever the app restarts. ",
+        el("a", { href: about.source }, "Get the source and run your own copy"),
+        "."),
+    ),
+  );
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  markCurrentPage();
+  showDemoNotice();
+});

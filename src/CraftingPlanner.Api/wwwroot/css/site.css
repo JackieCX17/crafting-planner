@@ -98,6 +98,20 @@ a {
   border-bottom-color: var(--accent);
 }
 
+/* The notice shown only on the public demo */
+
+.demo-notice {
+  background: var(--accent-soft);
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.demo-notice .inner {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 8px 16px;
+}
+
 /* Layout */
 
 main {

@@ -1,0 +1,11 @@
+# Only the source is needed to build the image.
+**/bin/
+**/obj/
+**/*.db
+**/*.db-*
+.git/
+.vscode/
+docs/
+notes/
+prototype/
+tests/

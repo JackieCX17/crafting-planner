@@ -272,6 +272,12 @@ All addresses start with `/api`. Requests and responses use JSON.
 | GET | `/lists/{id}/plan` | What it takes to make everything on the list |
 | GET | `/lists/{id}/plan/export` | The same as a CSV file |
 
+### About
+
+| Method | Address | Purpose |
+|---|---|---|
+| GET | `/about` | The app's name and version, whether it is the public demo, and where the source lives |
+
 ### Planning and summaries
 
 | Method | Address | Purpose |
@@ -330,6 +336,23 @@ Wherever a page needs the person to choose an item, it shows the same picker: a 
 | The pages call one run of a recipe a "batch": the steps table says "Required #", "Batches", and "Produced #", the form says "Yield" and "Time per batch", and the table ends with a total row | "Batch" is the manufacturing word for one run of a recipe that makes several units, and it reads with the columns beside it: 3 batches, 12 produced, 3 left over. The API keeps "crafts" for the same number. The total row puts the two numbers that add up (batches and time) where a reader looks for them |
 | The Items list reloads as the search text or a filter changes, after a short pause for typing | No "apply" step to forget. The pause keeps the API from being asked on every keystroke |
 | An item and its recipe are one form with one Save, on the New item page and the Item page alike | The first version needed two pages and a hidden editor to add a craftable item, which was too many steps. The page makes the two API calls (item, then recipe) itself; if the recipe is refused after the item is created, the form keeps the item and switches to editing it, so a second Save cannot create the item twice |
+
+### Hosting and the public demo (added after stage 6)
+
+The app is hosted as a public demo on Render's free tier, built from the `Dockerfile` in the repository and described by `render.yaml`. The local run remains the primary way to use the project; the demo exists so a reviewer can see the website without installing anything.
+
+A demo that anyone can edit and nobody logs in to carries risks the local run does not. They are answered by a single setting, `DemoMode`, which the hosted copy turns on and a local run never does, so the local app behaves exactly as built.
+
+| Risk | What could happen | Answer in demo mode |
+|---|---|---|
+| Anyone can edit anything | A visitor deletes or defaces the sample data before a reviewer arrives | The database file is deleted on every start, so the app comes back with the sample data. The free tier restarts the app whenever it wakes from idle, which is often. A notice on every page says so |
+| One visitor hammers the API | Scripted requests, or the largest plans and trees asked for in a loop | Every expensive input was already capped. The API is also rate-limited to 120 requests a minute per visitor, answered with 429 in the Problem Details format. Pages and pictures are not counted, since they are cheap and cached |
+| Everyone looks like one visitor | Behind the host's proxy, every request arrives from the proxy's address, so a rate limit would throttle all visitors together | The forwarded-headers middleware reads the visitor's real address from the proxy. Trusting any proxy is acceptable because only the host's proxy can reach the app |
+| Oversized requests | A huge body ties up the server | Request bodies are capped at 64 KB; the largest real request, a recipe of 20 lines, is a few hundred bytes |
+| Two visitors at once | They see each other's edits, and a race on a duplicate name gives a generic error instead of the friendly 409 | Accepted, as it was for the local app. The reset covers the rest |
+| The link dies | The free service lapses or terms change | The README keeps the local run as the primary path; the demo link is an extra |
+
+Two things demo mode does not change: the code-level protections, which are the same everywhere (parameterised queries, text-only rendering, validated icon names), and the API itself, which gains one endpoint, `GET /api/about`, that reports whether demo mode is on. The host also uses that endpoint as its health check.
 
 ### Item pictures (added after stage 6)
 

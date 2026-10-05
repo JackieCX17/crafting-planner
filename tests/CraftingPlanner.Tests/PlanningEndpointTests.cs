@@ -103,7 +103,7 @@ public class PlanningEndpointTests(PlannerApp app) : IClassFixture<PlannerApp>
             .SelectMany(path => path.Value!.AsObject().Select(method => (Path: path.Key, Method: method.Key, Operation: method.Value)))
             .ToList();
 
-        Assert.Equal(28, operations.Count);
+        Assert.Equal(29, operations.Count);
         Assert.All(operations, operation => Assert.False(
             string.IsNullOrWhiteSpace((string?)operation.Operation!["summary"]),
             $"{operation.Method.ToUpperInvariant()} {operation.Path} has no summary"));
@@ -140,6 +140,18 @@ public class PlanningEndpointTests(PlannerApp app) : IClassFixture<PlannerApp>
         Assert.Equal("broadsword", sword?.Icon);
         Assert.Equal(HttpStatusCode.OK, file.StatusCode);
         Assert.Equal("image/svg+xml", file.Content.Headers.ContentType?.MediaType);
+    }
+
+    /// <summary>The about endpoint names the app and says demo mode is off when the app is run normally.</summary>
+    [Fact]
+    public async Task About_SaysDemoModeIsOff()
+    {
+        var about = await client.GetFromJsonAsync<AboutResponse>("/api/about", Json);
+
+        Assert.NotNull(about);
+        Assert.Equal("Crafting Planner", about.Name);
+        Assert.False(about.DemoMode);
+        Assert.StartsWith("https://github.com/", about.Source);
     }
 
     /// <summary>An address that does not exist is answered in the standard error format, not with an empty page.</summary>

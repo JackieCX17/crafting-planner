@@ -2,7 +2,7 @@
 
 The shortest route through the project that touches everything it demonstrates: the website, the API, the documentation, the rules, and the tests. Each step says what to do and what it shows.
 
-Before starting: `dotnet run --project src/CraftingPlanner.Api`, and open <http://localhost:5080> in a browser with the developer tools' Network tab open.
+Before starting: `dotnet run --project src/CraftingPlanner.Api`, and open <http://localhost:5080> in a browser with the developer tools' Network tab open. (The public demo works for this too, but it may take a minute to wake and its data may have been changed by someone else; the local run is the dependable choice for a live walkthrough.)
 
 ## 1. The question the app answers (30 seconds)
 

@@ -589,6 +589,20 @@ Response `200 OK`:
 
 `depth` counts recipes: a raw item is 0, an item made only from raw items is 1. Hunter Kit is 4 because its Bow needs Sticks, which need Planks, which need Logs. Tool Kit is also 4; ties are settled by name. Both highlights are null when there are no recipes.
 
+### About the app
+
+```http
+GET /api/about
+```
+
+Response `200 OK`:
+
+```json
+{ "name": "Crafting Planner", "version": "1.0.0", "demoMode": false, "source": "https://github.com/JackieCX17/crafting-planner" }
+```
+
+`demoMode` is true on the public demo, where the data resets on every restart and the API is limited to 120 requests a minute per visitor. Past that limit, API requests are answered with `429 Too many requests` in the usual error format until the minute is up.
+
 ## Icons
 
 ### List the pictures an item can be given
