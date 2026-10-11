@@ -52,7 +52,7 @@ To start again with fresh sample data, stop the app and delete `src/CraftingPlan
 dotnet test
 ```
 
-69 tests in two kinds:
+91 tests in two kinds:
 
 - **Unit tests** hold the planning calculation to the worked example in the design document and to cases that catch specific mistakes, and cover the loop-free tree builder, chain depths, and the CSV export.
 - **Endpoint tests** start the real app in memory on a fresh database and call it the way a client would: every kind of operation, every kind of rejection, the export download, the API description, and the website.
